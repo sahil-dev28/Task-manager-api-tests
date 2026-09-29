@@ -4,6 +4,9 @@ A 2-day take-home assignment. You'll read unfamiliar code, write tests, track do
 
 Read **[ASSIGNMENT.md](./ASSIGNMENT.md)** for the full brief before you start.
 
+**Submission:** [SUBMISSION.md](./SUBMISSION.md) (short note) ·
+[BUGS.md](./BUGS.md) (bug report) · [COVERAGE.md](./COVERAGE.md) (coverage output)
+
 ---
 
 ## A note on AI tools
