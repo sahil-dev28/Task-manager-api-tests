@@ -36,6 +36,9 @@ const create = ({ title, description = '', status = 'todo', priority = 'medium',
     status,
     priority,
     dueDate,
+    // Set only through assign(); `create` never reads one off the body, the same
+    // way it never accepts a completedAt.
+    assignee: null,
     completedAt: null,
     createdAt: new Date().toISOString(),
   };
@@ -43,11 +46,25 @@ const create = ({ title, description = '', status = 'todo', priority = 'medium',
   return task;
 };
 
+// The fields a client is allowed to write. Everything else on a task is
+// server-owned: `id` and `createdAt` are identity and audit data, and
+// `completedAt` is derived from the status transition, not supplied with it.
+// Keeping the list here rather than in the route means the guarantee holds for
+// every caller, including any future one that skips validation.
+const WRITABLE_FIELDS = ['title', 'description', 'status', 'priority', 'dueDate'];
+
 const update = (id, fields) => {
   const index = tasks.findIndex((t) => t.id === id);
   if (index === -1) return null;
 
-  const updated = { ...tasks[index], ...fields };
+  const patch = {};
+  for (const key of WRITABLE_FIELDS) {
+    // `!== undefined` rather than a truthy check, so `{ dueDate: null }` still
+    // clears a due date instead of being silently dropped.
+    if (fields[key] !== undefined) patch[key] = fields[key];
+  }
+
+  const updated = { ...tasks[index], ...patch };
   tasks[index] = updated;
   return updated;
 };
@@ -76,6 +93,18 @@ const completeTask = (id) => {
   return updated;
 };
 
+// Assignment is an operation with its own endpoint, not a general field edit, so
+// `assignee` stays off WRITABLE_FIELDS and this is the only way to set one. That
+// keeps normalisation in one place: the store never holds a padded name.
+const assign = (id, assignee) => {
+  const index = tasks.findIndex((t) => t.id === id);
+  if (index === -1) return null;
+
+  const updated = { ...tasks[index], assignee: assignee.trim() };
+  tasks[index] = updated;
+  return updated;
+};
+
 const _reset = () => {
   tasks = [];
 };
@@ -90,5 +119,6 @@ module.exports = {
   update,
   remove,
   completeTask,
+  assign,
   _reset,
 };

@@ -41,7 +41,7 @@ describe('GET /tasks', () => {
     seed();
     const res = await request(app).get('/tasks');
     expect(Object.keys(res.body[0]).sort()).toEqual(
-      ['completedAt', 'createdAt', 'description', 'dueDate', 'id', 'priority', 'status', 'title'].sort()
+      ['assignee', 'completedAt', 'createdAt', 'description', 'dueDate', 'id', 'priority', 'status', 'title'].sort()
     );
   });
 });
@@ -119,6 +119,7 @@ describe('POST /tasks', () => {
       status: 'todo',
       priority: 'medium',
       dueDate: null,
+      assignee: null,
       completedAt: null,
     });
     expect(res.body.id).toMatch(UUID);
@@ -230,6 +231,30 @@ describe('PUT /tasks/:id', () => {
     expect(res.body).toEqual({ error: 'Task not found' });
   });
 
+  // assignee is set through PATCH /:id/assign, not through a general field update,
+  // so the BUG-03 whitelist drops it here. One write path keeps the trim in one place.
+  it('does not let PUT set the assignee', async () => {
+    const { t1 } = seed();
+    const res = await request(app).put(`/tasks/${t1.id}`).send({ assignee: 'Sam' });
+    expect(res.status).toBe(200);
+    expect(res.body.assignee).toBeNull();
+  });
+
+  // BUG-03 (fixed) at the boundary a client actually touches: a body echoing back
+  // the id it was read with used to rewrite the task's identity, orphaning it.
+  it('ignores server-owned fields in the body and keeps the task reachable', async () => {
+    const { t1 } = seed();
+    const res = await request(app)
+      .put(`/tasks/${t1.id}`)
+      .send({ title: 'renamed', id: 'stolen', createdAt: PAST });
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(t1.id);
+    expect(res.body.createdAt).toBe(t1.createdAt);
+
+    const after = await request(app).get('/tasks');
+    expect(after.body.find((t) => t.id === t1.id).title).toBe('renamed');
+  });
+
   it('returns 400 for an empty title', async () => {
     const { t1 } = seed();
     const res = await request(app).put(`/tasks/${t1.id}`).send({ title: '  ' });
@@ -301,5 +326,82 @@ describe('PATCH /tasks/:id/complete', () => {
     const res = await request(app).patch('/tasks/no-such-id/complete');
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'Task not found' });
+  });
+});
+
+describe('PATCH /tasks/:id/assign', () => {
+  it('returns 200 with the assigned task', async () => {
+    const { t1 } = seed();
+    const res = await request(app).patch(`/tasks/${t1.id}/assign`).send({ assignee: 'Sam' });
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(t1.id);
+    expect(res.body.assignee).toBe('Sam');
+  });
+
+  it('persists the assignment', async () => {
+    const { t1 } = seed();
+    await request(app).patch(`/tasks/${t1.id}/assign`).send({ assignee: 'Sam' });
+    const list = await request(app).get('/tasks');
+    expect(list.body.find((t) => t.id === t1.id).assignee).toBe('Sam');
+  });
+
+  it('trims surrounding whitespace from the name', async () => {
+    const { t1 } = seed();
+    const res = await request(app).patch(`/tasks/${t1.id}/assign`).send({ assignee: '  Sam  ' });
+    expect(res.body.assignee).toBe('Sam');
+  });
+
+  it('reassigns a task that already has an assignee', async () => {
+    const { t1 } = seed();
+    await request(app).patch(`/tasks/${t1.id}/assign`).send({ assignee: 'Sam' });
+    const res = await request(app).patch(`/tasks/${t1.id}/assign`).send({ assignee: 'Alex' });
+    expect(res.status).toBe(200);
+    expect(res.body.assignee).toBe('Alex');
+  });
+
+  it('leaves the rest of the task untouched', async () => {
+    const { t1 } = seed();
+    const res = await request(app).patch(`/tasks/${t1.id}/assign`).send({ assignee: 'Sam' });
+    expect(res.body).toMatchObject({ title: 'T1', status: 'todo', priority: 'high' });
+  });
+
+  it('returns 404 for an id that does not exist', async () => {
+    seed();
+    const res = await request(app).patch('/tasks/no-such-id/assign').send({ assignee: 'Sam' });
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: 'Task not found' });
+  });
+
+  it('returns 400 for an empty assignee', async () => {
+    const { t1 } = seed();
+    const res = await request(app).patch(`/tasks/${t1.id}/assign`).send({ assignee: '' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('assignee is required and must be a non-empty string');
+  });
+
+  it('returns 400 for a whitespace-only assignee', async () => {
+    const { t1 } = seed();
+    const res = await request(app).patch(`/tasks/${t1.id}/assign`).send({ assignee: '   ' });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 for a non-string assignee', async () => {
+    const { t1 } = seed();
+    const res = await request(app).patch(`/tasks/${t1.id}/assign`).send({ assignee: 42 });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when assignee is missing from the body', async () => {
+    const { t1 } = seed();
+    const res = await request(app).patch(`/tasks/${t1.id}/assign`).send({});
+    expect(res.status).toBe(400);
+  });
+
+  // Validation runs before the lookup, so a bad body is a 400 whether or not the
+  // id exists. Matches the order PUT /tasks/:id already uses.
+  it('validates the body before looking up the task', async () => {
+    seed();
+    const res = await request(app).patch('/tasks/no-such-id/assign').send({ assignee: '' });
+    expect(res.status).toBe(400);
   });
 });

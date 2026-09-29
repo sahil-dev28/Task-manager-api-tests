@@ -33,4 +33,14 @@ const validateUpdateTask = (body) => {
   return null;
 };
 
-module.exports = { validateCreateTask, validateUpdateTask };
+// Deliberately the same rule as `title` in validateCreateTask: a name is a
+// non-empty string once trimmed. There is no user store to check the name
+// against, so this validates shape, not existence.
+const validateAssignee = (body) => {
+  if (!body.assignee || typeof body.assignee !== 'string' || body.assignee.trim() === '') {
+    return 'assignee is required and must be a non-empty string';
+  }
+  return null;
+};
+
+module.exports = { validateCreateTask, validateUpdateTask, validateAssignee };

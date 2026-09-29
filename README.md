@@ -65,7 +65,7 @@ ASSIGNMENT.md               # Full brief — read this first
 | `DELETE` | `/tasks/:id`              | Delete a task (returns 204)              |
 | `PATCH`  | `/tasks/:id/complete`     | Mark a task as complete                  |
 | `GET`    | `/tasks/stats`            | Counts by status + overdue count         |
-| `PATCH`  | `/tasks/:id/assign`       | **Assign a task to a user** _(to implement)_ |
+| `PATCH`  | `/tasks/:id/assign`       | Assign a task to a user                  |
 
 ### Task shape
 
@@ -77,6 +77,7 @@ ASSIGNMENT.md               # Full brief — read this first
   "status": "pending | in-progress | completed",
   "priority": "low | medium | high",
   "dueDate": "ISO 8601 or null",
+  "assignee": "string or null",
   "completedAt": "ISO 8601 or null",
   "createdAt": "ISO 8601"
 }
@@ -100,6 +101,17 @@ curl "http://localhost:3000/tasks?status=pending&page=1&limit=10"
 ```bash
 curl -X PATCH http://localhost:3000/tasks/<id>/complete
 ```
+
+**Assign a task**
+```bash
+curl -X PATCH http://localhost:3000/tasks/<id>/assign \
+  -H "Content-Type: application/json" \
+  -d '{"assignee": "Sam"}'
+```
+
+Reassigning an already-assigned task overwrites the previous holder and returns
+`200`. An empty, whitespace-only, non-string or missing `assignee` is a `400`;
+an unknown task id is a `404`. There is no unassign path — see `BUGS.md` for why.
 
 ---
 

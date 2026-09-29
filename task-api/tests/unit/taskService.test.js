@@ -129,6 +129,7 @@ describe('create', () => {
       status: 'todo',
       priority: 'medium',
       dueDate: null,
+      assignee: null,
     });
   });
 
@@ -181,14 +182,33 @@ describe('update', () => {
     expect(service.update('no-such-id', { title: 'x' })).toBeNull();
   });
 
-  // BUG: update spreads the caller's fields over the task without a whitelist,
-  // so identity and audit fields can be overwritten and the task becomes
-  // unreachable by its original id.
-  it.failing('refuses to overwrite the id and createdAt', () => {
+  // BUG-03 (fixed): update used to spread the caller's fields over the task with
+  // no whitelist, so a body carrying an id overwrote the task's identity and left
+  // it unreachable. update now copies only the writable fields.
+  it('refuses to overwrite the id and createdAt', () => {
     const { t1 } = seed();
     service.update(t1.id, { id: 'stolen', createdAt: PAST });
     expect(service.findById(t1.id)).toBeDefined();
     expect(service.findById(t1.id).createdAt).toBe(t1.createdAt);
+  });
+
+  it('refuses to overwrite completedAt', () => {
+    const { t1 } = seed();
+    service.update(t1.id, { completedAt: PAST });
+    expect(service.findById(t1.id).completedAt).toBeNull();
+  });
+
+  it('drops a field that is not part of the task shape', () => {
+    const { t1 } = seed();
+    service.update(t1.id, { bogus: 'x' });
+    expect(service.findById(t1.id).bogus).toBeUndefined();
+  });
+
+  // Guards the `!== undefined` check in the whitelist loop: a truthy test would
+  // swallow this and make a due date impossible to clear.
+  it('still clears dueDate when null is sent explicitly', () => {
+    const { t1 } = seed();
+    expect(service.update(t1.id, { dueDate: null }).dueDate).toBeNull();
   });
 });
 
@@ -235,5 +255,44 @@ describe('completeTask', () => {
   it.failing('preserves the priority of the completed task', () => {
     const { t1 } = seed();
     expect(service.completeTask(t1.id).priority).toBe('high');
+  });
+});
+
+describe('assign', () => {
+  it('sets the assignee and returns the updated task', () => {
+    const { t1 } = seed();
+    expect(service.assign(t1.id, 'Sam').assignee).toBe('Sam');
+  });
+
+  it('persists the assignment in the store', () => {
+    const { t1 } = seed();
+    service.assign(t1.id, 'Sam');
+    expect(service.findById(t1.id).assignee).toBe('Sam');
+  });
+
+  it('trims surrounding whitespace from the name', () => {
+    const { t1 } = seed();
+    expect(service.assign(t1.id, '  Sam  ').assignee).toBe('Sam');
+  });
+
+  // Reassignment is ordinary work, not a conflict: last write wins.
+  it('overwrites an existing assignee', () => {
+    const { t1 } = seed();
+    service.assign(t1.id, 'Sam');
+    expect(service.assign(t1.id, 'Alex').assignee).toBe('Alex');
+  });
+
+  it('leaves the other fields alone', () => {
+    const { t1 } = seed();
+    expect(service.assign(t1.id, 'Sam')).toMatchObject({
+      title: 'T1',
+      status: 'todo',
+      priority: 'high',
+    });
+  });
+
+  it('returns null for an id that does not exist', () => {
+    seed();
+    expect(service.assign('no-such-id', 'Sam')).toBeNull();
   });
 });
