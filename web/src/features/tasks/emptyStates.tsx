@@ -1,8 +1,9 @@
-import { Circle, CircleAlert, CircleCheck, CircleDashed, Layers, ListTodo, Plus } from "lucide-react";
+import { CircleAlert, Layers, ListTodo, Plus } from "lucide-react";
 
 import type { TaskStatus } from "@/api/types";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { STATUS_ICON } from "@/lib/vocab";
 
 export const NoTasksEmpty = ({
   onNewTask,
@@ -19,7 +20,7 @@ export const NoTasksEmpty = ({
     body="The API keeps tasks in memory, so a fresh server always starts empty. Add your first task, or load a few examples to look around."
     actions={
       <>
-        <Button variant="primary" size="lg" leadingIcon={Plus} onClick={onNewTask}>
+        <Button variant="primary" size="lg" leadingIcon={Plus} kbd="N" onClick={onNewTask}>
           New task
         </Button>
         <Button size="lg" leadingIcon={Layers} loading={samplesLoading} onClick={onAddSamples}>
@@ -30,15 +31,13 @@ export const NoTasksEmpty = ({
   />
 );
 
-const FILTER_COPY: Record<TaskStatus, { icon: typeof Circle; title: string; body: string }> = {
-  todo: { icon: Circle, title: "Nothing to do", body: "Every task is either in progress or done." },
+const FILTER_COPY: Record<TaskStatus, { title: string; body: string }> = {
+  todo: { title: "Nothing to do", body: "Every task is either in progress or done." },
   in_progress: {
-    icon: CircleDashed,
     title: "Nothing in progress",
     body: "Move a task here from its menu with Set status.",
   },
   done: {
-    icon: CircleCheck,
     title: "No completed tasks yet",
     body: "Tasks you mark complete will show up here.",
   },
@@ -48,7 +47,7 @@ export const FilterEmpty = ({ status, onShowAll }: { status: TaskStatus; onShowA
   const copy = FILTER_COPY[status];
   return (
     <EmptyState
-      icon={copy.icon}
+      icon={STATUS_ICON[status]}
       title={copy.title}
       body={copy.body}
       actions={<Button onClick={onShowAll}>Show all tasks</Button>}

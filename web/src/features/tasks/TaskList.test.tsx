@@ -45,6 +45,7 @@ describe("TaskList", () => {
     expect(screen.getByLabelText("Loading tasks")).toBeInTheDocument();
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     expect(container.querySelector("#tasks")).not.toBeNull();
+    expect(screen.getByLabelText("Loading tasks").children).toHaveLength(5);
   });
 
   it("keeps the skip-link target present when there are no tasks", () => {
@@ -57,12 +58,19 @@ describe("TaskList", () => {
     expect(screen.getByRole("heading", { name: "No tasks yet" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /Add sample tasks/ }));
     expect(onAddSamples).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("button", { name: "Show all tasks" })).not.toBeInTheDocument();
   });
 
-  it("shows the filter-empty state with copy for the active status", async () => {
-    const { onShowAll } = setup({ tasks: [], activeStatus: "in_progress" });
-    expect(screen.getByRole("heading", { name: "Nothing in progress" })).toBeInTheDocument();
-    expect(screen.getByText("Move a task here from its menu with Set status.")).toBeInTheDocument();
+  it.each([
+    ["todo", "Nothing to do", "Every task is either in progress or done."],
+    ["in_progress", "Nothing in progress", "Move a task here from its menu with Set status."],
+    ["done", "No completed tasks yet", "Tasks you mark complete will show up here."],
+  ] as const)("shows the %s filter-empty copy", async (status, title, body) => {
+    const { onShowAll } = setup({ tasks: [], activeStatus: status });
+    expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
+    expect(screen.getByText(body)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add sample tasks/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^New task$/ })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Show all tasks" }));
     expect(onShowAll).toHaveBeenCalledOnce();
   });
