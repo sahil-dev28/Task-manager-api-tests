@@ -147,10 +147,11 @@ pick Edit from its menu), completed (the checkbox, optimistic with rollback), an
 (menu, then a confirmation). The empty state can seed five sample tasks. Every write
 reports back with a toast, and a 404 mid-edit tells you the server was restarted.
 
-`/tasks/:id` opens the edit form for that task; the detail sheet, assign flow and offline
-handling from `web/DESIGN.md` are not built.
+`/tasks/:id` opens the edit form for that task. Assigning a task and offline handling are
+not built.
 
-**Stack:** Vite, React, TypeScript, Tailwind v4, TanStack Query, React Router.
+**Stack:** Vite, React, TypeScript, Tailwind v4, shadcn/ui, TanStack Query, React Router,
+react-hook-form with zod.
 
 **One design note worth knowing:** the pager is Previous / Next with no page count. The
 API returns bare arrays with no `total`, so the client fetches page N+1 alongside page N
