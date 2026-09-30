@@ -50,8 +50,11 @@ describe("request", () => {
 
   it("is an ApiError for 404 so the caller can take the G404 path", async () => {
     server.use(http.get(url, () => HttpResponse.json({ error: "Task not found" }, { status: 404 })));
-    const err = await request("/thing").catch((e) => e);
+    const err: unknown = await request("/thing").catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ApiError);
+    // Narrow rather than cast, so the assertions below are type-checked.
+    if (!(err instanceof ApiError)) throw new Error("expected an ApiError");
     expect(err.status).toBe(404);
+    expect(err.message).toBe("Task not found");
   });
 });
