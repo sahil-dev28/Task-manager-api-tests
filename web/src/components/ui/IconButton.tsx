@@ -51,6 +51,7 @@ export function IconButton({
         SIZE[size],
         VARIANT[variant],
         disabled && (variant === "outline" ? "border-default text-disabled" : "text-disabled"),
+        disabled && "cursor-not-allowed",
         className,
       )}
       {...rest}

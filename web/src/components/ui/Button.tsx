@@ -58,6 +58,7 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const inert = disabled || loading;
+  const showMark = mark && variant === "primary";
 
   return (
     <button
@@ -69,14 +70,14 @@ export function Button({
         "inline-flex select-none items-center gap-1.5 font-sans transition-[background-color,border-color,color,box-shadow] duration-[120ms]",
         SIZE[size],
         VARIANT[variant],
-        mark && "gap-2 py-1 pl-1 pr-3.5",
+        showMark && "gap-2 py-1 pl-1 pr-3.5",
         inert && "cursor-not-allowed",
         disabled && DISABLED[variant],
         className,
       )}
       {...rest}
     >
-      {mark && Icon && variant === "primary" ? (
+      {showMark && Icon ? (
         <span className="bg-mark grid size-7 place-items-center rounded-xs text-mark-ink">
           {loading ? (
             <LoaderCircle aria-hidden className="size-3.5 animate-spin" />
