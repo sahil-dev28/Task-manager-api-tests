@@ -22,7 +22,11 @@ export function PriorityIndicator({
 
   if (variant === "compact") {
     return (
-      <span aria-label={`Priority: ${readable}`} className={cn("inline-flex", TONE[priority])}>
+      <span
+        aria-label={`Priority: ${readable}`}
+        title={`${readable} priority`}
+        className={cn("inline-flex", TONE[priority])}
+      >
         <Icon aria-hidden className="size-4" strokeWidth={2.5} />
       </span>
     );

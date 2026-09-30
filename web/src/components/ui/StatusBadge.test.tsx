@@ -27,6 +27,12 @@ describe("PriorityIndicator", () => {
     expect(screen.getByLabelText("Priority: High")).toBeInTheDocument();
     expect(screen.queryByText("HIGH")).not.toBeInTheDocument();
   });
+
+  it("gives the compact variant a tooltip as well as an accessible name", () => {
+    render(<PriorityIndicator priority="high" variant="compact" />);
+    const el = screen.getByLabelText("Priority: High");
+    expect(el).toHaveAttribute("title", "High priority");
+  });
 });
 
 describe("AssigneeChip", () => {
