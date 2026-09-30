@@ -37,7 +37,10 @@ export function useLookahead(status: TaskStatus | null, page: number) {
   const query = useQuery({
     queryKey: taskKeys.page(status, page + 1),
     queryFn: ({ signal }) => listTasks({ status, page: page + 1, limit: PAGE_SIZE }, signal),
-    placeholderData: keepPreviousData,
+    // Deliberately NOT keepPreviousData. The cache benefit of the lookahead comes
+    // from sharing a key with the page itself, not from placeholder data — while
+    // holding previous data here would make hasNext answer for the page the user
+    // just left, enabling Next on the last page until the real response landed.
   });
 
   return { ...query, hasNext: (query.data?.length ?? 0) > 0 };

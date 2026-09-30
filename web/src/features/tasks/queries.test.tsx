@@ -2,7 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import type { ReactNode } from "react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { makeTask } from "@/test/fixtures";
 import { makeTestQueryClient } from "@/test/renderWithProviders";
@@ -12,10 +12,18 @@ import { PAGE_SIZE, taskKeys, useLookahead, useTasksPage } from "./queries";
 
 const base = "http://localhost:3000";
 
-const wrapper = ({ children }: { children: ReactNode }) => {
-  const client = makeTestQueryClient();
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-};
+// One client per test, created outside the wrapper. A client built inside the
+// wrapper would be rebuilt on every render, discarding the cache and making any
+// rerender-based test impossible.
+let client: ReturnType<typeof makeTestQueryClient>;
+
+beforeEach(() => {
+  client = makeTestQueryClient();
+});
+
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <QueryClientProvider client={client}>{children}</QueryClientProvider>
+);
 
 describe("taskKeys", () => {
   it("keys a page by its status and page number", () => {
@@ -64,6 +72,27 @@ describe("useLookahead", () => {
 
     const { result } = renderHook(() => useLookahead(null, 1), { wrapper });
     await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.hasNext).toBe(false);
+  });
+
+  it("does not claim a next page while a newer lookahead is still loading", async () => {
+    // Page 2 has a task, page 3 does not.
+    server.use(http.get(`${base}/tasks`, ({ request }) => {
+      const page = new URL(request.url).searchParams.get("page");
+      return HttpResponse.json(page === "2" ? [makeTask()] : []);
+    }));
+
+    const { result, rerender } = renderHook(({ page }) => useLookahead(null, page), {
+      wrapper,
+      initialProps: { page: 1 },
+    });
+    await waitFor(() => expect(result.current.hasNext).toBe(true));
+
+    // Now looking ahead to page 3, which is empty. hasNext must not answer for page 2.
+    rerender({ page: 2 });
+    expect(result.current.hasNext).toBe(false);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.hasNext).toBe(false);
   });
 });
