@@ -41,6 +41,7 @@ describe("SegmentedControl", () => {
     screen.getByRole("radio", { name: /All/ }).focus();
     await userEvent.keyboard("{ArrowRight}");
     expect(onChange).toHaveBeenCalledWith("todo");
+    expect(screen.getByRole("radio", { name: /To do/ })).toHaveFocus();
   });
 
   it("wraps from the last option to the first", async () => {
@@ -48,6 +49,7 @@ describe("SegmentedControl", () => {
     screen.getByRole("radio", { name: /Done/ }).focus();
     await userEvent.keyboard("{ArrowRight}");
     expect(onChange).toHaveBeenCalledWith("all");
+    expect(screen.getByRole("radio", { name: /All/ })).toHaveFocus();
   });
 
   it("jumps to the ends with Home and End", async () => {
@@ -55,8 +57,18 @@ describe("SegmentedControl", () => {
     screen.getByRole("radio", { name: /To do/ }).focus();
     await userEvent.keyboard("{End}");
     expect(onChange).toHaveBeenCalledWith("done");
+    expect(screen.getByRole("radio", { name: /Done/ })).toHaveFocus();
     await userEvent.keyboard("{Home}");
     expect(onChange).toHaveBeenCalledWith("all");
+    expect(screen.getByRole("radio", { name: /All/ })).toHaveFocus();
+  });
+
+  it("keeps exactly one segment tabbable, and it is the selected one", () => {
+    setup("in_progress");
+    const radios = screen.getAllByRole("radio");
+    const tabbable = radios.filter((r) => r.getAttribute("tabindex") === "0");
+    expect(tabbable).toHaveLength(1);
+    expect(tabbable[0]).toHaveAccessibleName(/In progress/);
   });
 
   it("shows a middot instead of a count while counts are unknown", () => {
@@ -70,5 +82,17 @@ describe("SegmentedControl", () => {
       />,
     );
     expect(screen.getAllByText("·")).toHaveLength(4);
+  });
+
+  it("blocks interaction while disabled", async () => {
+    const onChange = vi.fn();
+    render(
+      <SegmentedControl label="Filter by status" options={options} value="all" onChange={onChange} disabled />,
+    );
+    await userEvent.click(screen.getByRole("radio", { name: /To do/ }));
+    screen.getByRole("radio", { name: /All/ }).focus();
+    await userEvent.keyboard("{ArrowRight}");
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("radiogroup")).toHaveAttribute("aria-disabled", "true");
   });
 });
