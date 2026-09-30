@@ -10,6 +10,20 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // Runs before first paint so a dark-preferring visitor never sees a light flash.
+      // The storage key must match STORAGE_KEY in src/app/theme.tsx.
+      (function () {
+        try {
+          var stored = localStorage.getItem("tasks-theme");
+          var dark =
+            stored === "dark" ||
+            ((stored === "system" || !stored) &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (dark) document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

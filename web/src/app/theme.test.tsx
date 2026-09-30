@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ThemeProvider, useTheme } from "./theme";
 
@@ -16,9 +16,33 @@ function Probe() {
   );
 }
 
+function stubMatchMedia(matches: boolean) {
+  const listeners = new Set<(e: MediaQueryListEvent) => void>();
+  vi.spyOn(window, "matchMedia").mockImplementation(
+    (query: string) =>
+      ({
+        matches,
+        media: query,
+        onchange: null,
+        addEventListener: (_: string, cb: (e: MediaQueryListEvent) => void) => listeners.add(cb),
+        removeEventListener: (_: string, cb: (e: MediaQueryListEvent) => void) => listeners.delete(cb),
+        dispatchEvent: () => false,
+      }) as unknown as MediaQueryList,
+  );
+  return {
+    change(next: boolean) {
+      for (const cb of listeners) cb({ matches: next } as MediaQueryListEvent);
+    },
+  };
+}
+
 beforeEach(() => {
   localStorage.clear();
   document.documentElement.className = "";
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("ThemeProvider", () => {
@@ -71,5 +95,46 @@ describe("ThemeProvider", () => {
     render(<ThemeProvider><Probe /></ThemeProvider>);
     await userEvent.click(screen.getByRole("button", { name: "Dark" }));
     await waitFor(() => expect(document.documentElement).not.toHaveClass("no-transition"));
+  });
+
+  it("resolves to dark when the system prefers dark", () => {
+    stubMatchMedia(true);
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+    expect(screen.getByTestId("resolved")).toHaveTextContent("dark");
+    expect(document.documentElement).toHaveClass("dark");
+  });
+
+  it("resolves to light when the system does not prefer dark", () => {
+    stubMatchMedia(false);
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+    expect(screen.getByTestId("resolved")).toHaveTextContent("light");
+    expect(document.documentElement).not.toHaveClass("dark");
+  });
+
+  it("follows a live system preference change while the preference is system", async () => {
+    const media = stubMatchMedia(false);
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+    expect(screen.getByTestId("resolved")).toHaveTextContent("light");
+
+    media.change(true);
+
+    await waitFor(() => expect(screen.getByTestId("resolved")).toHaveTextContent("dark"));
+    expect(document.documentElement).toHaveClass("dark");
+  });
+
+  it("still renders when localStorage is unavailable", async () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+    expect(screen.getByTestId("pref")).toHaveTextContent("system");
+
+    // A write that throws must not break the switch.
+    await userEvent.click(screen.getByRole("button", { name: "Dark" }));
+    expect(document.documentElement).toHaveClass("dark");
   });
 });
