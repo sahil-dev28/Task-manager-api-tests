@@ -2,32 +2,39 @@
 
 Day 2, Part A — defects found while writing the Day 1 test suite.
 
-Ten distinct bugs, each pinned by a test in `task-api/tests/`. The tests use
-Jest's `it.failing()`, which inverts the result: the test is green only while the
-assertion inside it *fails*. That keeps the suite green today while documenting
-exactly what each function *should* do. Fixing a bug turns its test red, and
-flipping the marker from `it.failing` back to `it` is what proves the fix.
+Ten distinct bugs, found while writing the Day 1 test suite. Each was pinned by a
+test written with Jest's `it.failing()`, which inverts the result: the test is
+green only while the assertion inside it *fails*. That kept the suite green while
+documenting exactly what each function *should* do, and turned each fix into a
+mechanical proof — fixing a bug turns its test red, and flipping the marker back
+to `it` is what proves the fix.
 
-**[BUG-03](#bug-03--update-lets-a-client-overwrite-id-and-createdat) is fixed** —
-that is Part B of the assignment, written up in place below. The other nine stand,
-pinned by 11 remaining `it.failing` markers (5 unit, 6 integration). BUG-01 is
-pinned three times — twice at the service level, once over HTTP — because it is
-visible at both layers.
+**All ten are now fixed.** Every `it.failing` marker is a plain `it`, passing with
+its assertions unchanged: 112 tests, 98.72% statement coverage. Each fix carries a
+`BUG-0n` comment at the site, so `grep -rn "BUG-" task-api/src` lists all ten.
+
+The **Was** column and the `**Was:**` line in each write-up below point at the
+original JavaScript, which is preserved in git history at commit `00e6324` — for
+example `git show 00e6324:task-api/src/services/taskService.js`. `task-api/` has
+since been rewritten in TypeScript (see [SUBMISSION.md](./SUBMISSION.md)), so the
+**Fixed at** column points at where each defect is answered now. Every "before"
+snippet below is quoted inline, so the report reads without checking out the old
+commit.
 
 ## Summary
 
-| ID | Severity | Location | One line |
-|----|----------|----------|----------|
-| [BUG-01](#bug-01--pagination-offset-is-off-by-one-page) | High | `taskService.js:11-14` | `page=1` silently skips the first page |
-| [BUG-02](#bug-02--status-filter-matches-substrings) | High | `taskService.js:9` | `?status=o` returns every task |
-| [BUG-03](#bug-03--update-lets-a-client-overwrite-id-and-createdat) | High ✅ **fixed** | `taskService.js:46-53` | `PUT` can rewrite `id`, orphaning the task |
-| [BUG-04](#bug-04--completing-a-task-resets-its-priority-to-medium) | Medium | `taskService.js:63-77` | `PATCH /complete` downgrades `high` to `medium` |
-| [BUG-05](#bug-05--put-status-done-never-stamps-completedat) | Medium | `routes/tasks.js:40-52` | Same state, two different records |
-| [BUG-06](#bug-06--status-and-pagination-are-mutually-exclusive) | Medium | `routes/tasks.js:11-28` | `page`/`limit` dropped when `status` is present |
-| [BUG-07](#bug-07--malformed-json-returns-500-instead-of-400) | Medium | `app.js:9-12` | Client error reported as a server error |
-| [BUG-08](#bug-08--getall-hands-out-the-live-task-objects) | Low | `taskService.js:5` | Shallow copy; callers can mutate the store |
-| [BUG-09](#bug-09--title-is-trimmed-for-validation-but-stored-raw) | Low | `validators.js:5` + `taskService.js:31` | `"  x  "` validates as `"x"`, stores as `"  x  "` |
-| [BUG-10](#bug-10--duedate-accepts-any-format-dateparse-understands) | Low | `validators.js:14, 30` | Error message promises ISO, check does not enforce it |
+| ID | Severity | Was (JS, commit `00e6324`) | One line | Fixed at (`task-api/src/`) |
+|----|----------|----------|----------|----------|
+| [BUG-01](#bug-01--pagination-offset-is-off-by-one-page) | High | `taskService.js:11-14` | `page=1` silently skips the first page | `utils/pagination.ts:4` |
+| [BUG-02](#bug-02--status-filter-matches-substrings) | High | `taskService.js:9` | `?status=o` returns every task | `services/taskService.ts:25` |
+| [BUG-03](#bug-03--update-lets-a-client-overwrite-id-and-createdat) | High | `taskService.js:46-53` | `PUT` can rewrite `id`, orphaning the task | `services/taskService.ts:79` |
+| [BUG-04](#bug-04--completing-a-task-resets-its-priority-to-medium) | Medium | `taskService.js:63-77` | `PATCH /complete` downgrades `high` to `medium` | `services/taskService.ts:137` |
+| [BUG-05](#bug-05--put-status-done-never-stamps-completedat) | Medium | `routes/tasks.js:40-52` | Same state, two different records | `services/taskService.ts:111` |
+| [BUG-06](#bug-06--status-and-pagination-are-mutually-exclusive) | Medium | `routes/tasks.js:11-28` | `page`/`limit` dropped when `status` is present | `controller/taskController.ts:23` |
+| [BUG-07](#bug-07--malformed-json-returns-500-instead-of-400) | Medium | `app.js:9-12` | Client error reported as a server error | `app.ts:27` |
+| [BUG-08](#bug-08--getall-hands-out-the-live-task-objects) | Low | `taskService.js:5` | Shallow copy; callers can mutate the store | `services/taskService.ts:13` |
+| [BUG-09](#bug-09--title-is-trimmed-for-validation-but-stored-raw) | Low | `validators.js:5` + `taskService.js:31` | `"  x  "` validates as `"x"`, stores as `"  x  "` | `services/taskService.ts:62` |
+| [BUG-10](#bug-10--duedate-accepts-any-format-dateparse-understands) | Low | `validators.js:14, 30` | Error message promises ISO, check does not enforce it | `utils/validators.ts:6` |
 
 Plus one [documentation discrepancy](#not-a-code-bug--readme-documents-the-wrong-status-vocabulary) worth resolving before shipping.
 
@@ -35,7 +42,7 @@ Plus one [documentation discrepancy](#not-a-code-bug--readme-documents-the-wrong
 
 ## BUG-01 — Pagination offset is off by one page
 
-**Severity:** High · **Where:** `task-api/src/services/taskService.js:11-14`
+**Severity:** High · **Was:** `task-api/src/services/taskService.js:11-14`
 
 ```js
 const getPaginated = (page, limit) => {
@@ -79,13 +86,15 @@ const offset = (page - 1) * limit;
 Worth guarding `page < 1` too, so `?page=0` clamps to the first page rather than
 producing a negative offset (`slice(-2, 0)` returns `[]`, another silent empty).
 
-**Tests:** `tests/unit/taskService.test.js:81`, `:86`; `tests/integration/tasks.test.js:76`
+**Tests:** `tests/unit/taskService.test.ts` — "returns the first page for page 1", "returns the second page for
+page 2"; `tests/integration/tasks.test.ts` — "returns the first page for page 1", "returns the second page for
+page 2"
 
 ---
 
 ## BUG-02 — Status filter matches substrings
 
-**Severity:** High · **Where:** `task-api/src/services/taskService.js:9`
+**Severity:** High · **Was:** `task-api/src/services/taskService.js:9`
 
 ```js
 const getByStatus = (status) => tasks.filter((t) => t.status.includes(status));
@@ -129,13 +138,13 @@ const getByStatus = (status) => tasks.filter((t) => t.status === status);
 Separately worth deciding whether an unknown status should be a `400` from the
 route rather than a silent empty `200` — see "What I'd do next".
 
-**Test:** `tests/unit/taskService.test.js:72`
+**Test:** `tests/unit/taskService.test.ts` — "does not match a status fragment"
 
 ---
 
 ## BUG-03 — `update` lets a client overwrite `id` and `createdAt`
 
-**Severity:** High · **Where:** `task-api/src/services/taskService.js:46-53` · **Status:** fixed (Part B)
+**Severity:** High · **Was:** `task-api/src/services/taskService.js:46-53` · **Status:** fixed
 
 ```js
 const updated = { ...tasks[index], ...fields };
@@ -246,21 +255,24 @@ unknown keys — which is where Google's API guide lands.
 **What this fix deliberately does not do:** BUG-05 is still broken. `PUT
 {"status": "done"}` still leaves `completedAt: null`, because `update` applies the
 field without deriving the timestamp. Fixing that here would have mixed two
-different defects into one change. The allowlist is where that fix will go when
-it happens, which is part of why this was the right first fix.
+different defects into one change. The allowlist is exactly where that fix later
+went — see [BUG-05](#bug-05--put-status-done-never-stamps-completedat) — which is
+part of why this was the right first fix.
 
-**Tests:** `tests/unit/taskService.test.js:188` (the original `it.failing`, now
-passing unchanged — no assertion was rewritten to fit the fix), plus `:195`
-(`completedAt`), `:201` (unknown key dropped), `:209` (the `null` regression
-guard), and `tests/integration/tasks.test.js:245` proving it at the HTTP boundary.
-All four new tests were written red before the fix; `taskService.js` holds 100%
-statement, branch, function and line coverage after it.
+**Tests:** `tests/unit/taskService.test.ts` — "refuses to overwrite the id and createdAt" (the original
+`it.failing`, now passing unchanged — no assertion was rewritten to fit the fix),
+plus "refuses to overwrite completedAt", "drops a field that is not part of the
+task shape", and "still clears dueDate when null is sent explicitly" (the `null`
+regression guard); `tests/integration/tasks.test.ts` — "ignores server-owned fields in the
+body and keeps the task reachable" proves it at the HTTP boundary. All four new
+tests were written red before the fix; `taskService.ts` holds 100% statement,
+branch, function and line coverage.
 
 ---
 
 ## BUG-04 — Completing a task resets its priority to `medium`
 
-**Severity:** Medium · **Where:** `task-api/src/services/taskService.js:63-77`
+**Severity:** Medium · **Was:** `task-api/src/services/taskService.js:63-77`
 
 ```js
 const updated = {
@@ -303,13 +315,13 @@ const updated = {
 };
 ```
 
-**Test:** `tests/unit/taskService.test.js:255`
+**Test:** `tests/unit/taskService.test.ts` — "preserves the priority of the completed task"; `tests/integration/tasks.test.ts` — "preserves the priority of the completed task"
 
 ---
 
 ## BUG-05 — `PUT { status: 'done' }` never stamps `completedAt`
 
-**Severity:** Medium · **Where:** `task-api/src/routes/tasks.js:40-52` (and `taskService.update`)
+**Severity:** Medium · **Was:** `task-api/src/routes/tasks.js:40-52` (and `taskService.update`)
 
 **Expected:** A task in `status: 'done'` has a `completedAt` timestamp,
 regardless of which endpoint put it there.
@@ -358,13 +370,13 @@ confirm it before shipping. Clearing the timestamp is the self-consistent
 choice; keeping a stale one means `done: false, completedAt: <date>` records
 exist, which is exactly the ambiguity this fix is meant to remove.
 
-**Test:** `tests/integration/tasks.test.js:290`
+**Test:** `tests/integration/tasks.test.ts` — "stamps completedAt when the status is set to done"; `tests/unit/taskService.test.ts` — "stamps completedAt when the status is set to done"
 
 ---
 
 ## BUG-06 — `status` and pagination are mutually exclusive
 
-**Severity:** Medium · **Where:** `task-api/src/routes/tasks.js:11-28`
+**Severity:** Medium · **Was:** `task-api/src/routes/tasks.js:11-28`
 
 ```js
 if (status) {
@@ -420,13 +432,13 @@ This wants `getPaginated` to take a list rather than read the module-level
 next" on returning pagination metadata — a bare array cannot tell a client
 whether more pages exist.
 
-**Test:** `tests/integration/tasks.test.js:66`
+**Test:** `tests/integration/tasks.test.ts` — "applies pagination to a filtered list", "returns the second page of a filtered list"
 
 ---
 
 ## BUG-07 — Malformed JSON returns 500 instead of 400
 
-**Severity:** Medium · **Where:** `task-api/src/app.js:9-12`
+**Severity:** Medium · **Was:** `task-api/src/app.js:9-12`
 
 ```js
 app.use((err, req, res, next) => {
@@ -475,13 +487,13 @@ app.use((err, req, res, next) => {
 Keeping the 5xx-only logging also stops client mistakes from filling the server
 logs.
 
-**Test:** `tests/integration/tasks.test.js:203`
+**Test:** `tests/integration/tasks.test.ts` — "returns 400 for a malformed JSON body"
 
 ---
 
 ## BUG-08 — `getAll` hands out the live task objects
 
-**Severity:** Low · **Where:** `task-api/src/services/taskService.js:5`
+**Severity:** Low · **Was:** `task-api/src/services/taskService.js:5`
 
 ```js
 const getAll = () => [...tasks];
@@ -520,13 +532,13 @@ service already does everywhere except `getAll`'s consumers. I would pick
 freezing: it costs nothing per read and turns an accidental mutation into a
 loud error instead of a silent write.
 
-**Test:** `tests/unit/taskService.test.js:40`
+**Test:** `tests/unit/taskService.test.ts` — "does not expose the stored task objects for mutation"
 
 ---
 
 ## BUG-09 — Title is trimmed for validation but stored raw
 
-**Severity:** Low · **Where:** `task-api/src/utils/validators.js:5` + `taskService.js:31`
+**Severity:** Low · **Was:** `task-api/src/utils/validators.js:5` + `taskService.js:31`
 
 ```js
 // validators.js — trims to test
@@ -563,13 +575,13 @@ Same in `update`'s whitelist from BUG-03. Putting it in the service rather than
 the validator means every write path normalises, including any future one that
 skips validation.
 
-**Test:** `tests/integration/tasks.test.js:189`
+**Test:** `tests/integration/tasks.test.ts` — "trims surrounding whitespace from the title"; `tests/unit/taskService.test.ts` — "trims surrounding whitespace from the title"
 
 ---
 
 ## BUG-10 — `dueDate` accepts any format `Date.parse` understands
 
-**Severity:** Low · **Where:** `task-api/src/utils/validators.js:14` and `:30`
+**Severity:** Low · **Was:** `task-api/src/utils/validators.js:14` and `:30`
 
 ```js
 if (body.dueDate && isNaN(Date.parse(body.dueDate))) {
@@ -618,7 +630,7 @@ date" and normalise on write — that is a smaller change and equally honest. Th
 important half is that the store ends up consistent; which way the message goes
 is a product call.
 
-**Test:** `tests/integration/tasks.test.js:196`
+**Test:** `tests/integration/tasks.test.ts` — "rejects a dueDate that is not an ISO string", "accepts a full ISO dueDate"
 
 ---
 

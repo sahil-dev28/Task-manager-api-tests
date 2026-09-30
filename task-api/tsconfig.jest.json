@@ -1,0 +1,18 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		// Only ts-jest uses this, to compile the tests. The suite runs as CommonJS,
+		// and CommonJS output needs "node10" resolution, which TypeScript 6 marks
+		// as deprecated.
+		//
+		// No type-checking happens here: "node10" cannot read a package's "exports"
+		// map. ts-jest compiles with diagnostics off, and tests/tsconfig.json does
+		// the checking with "bundler" resolution.
+		"module": "CommonJS",
+		"moduleResolution": "node10",
+		"ignoreDeprecations": "6.0",
+		"verbatimModuleSyntax": false,
+		"types": ["node", "jest"]
+	},
+	"include": ["src", "tests"]
+}

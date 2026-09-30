@@ -1,0 +1,23 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	// Type-checks the tests, and it sits in this folder on purpose. An editor
+	// picks the nearest file named tsconfig.json, and the one at the package root
+	// only includes src. A tsconfig.typecheck.json at the root type-checks fine
+	// from the command line, but the editor never reads that name, so it falls
+	// back to a default project with no `paths` and no jest types and marks every
+	// `@/` import and every `describe` as an error. `npm run check-types` uses
+	// this file, so the editor and the command line agree.
+	"extends": "../tsconfig.json",
+	"include": ["."],
+	"compilerOptions": {
+		"types": ["node", "jest"],
+		// `paths` is relative to the file that declares it, so the root value of
+		// "./src/*" would point inside tests/ once inherited.
+		"paths": {
+			"@/*": ["../src/*"]
+		},
+		// The tests index fixtures they just created, so this check only adds noise
+		// here. src keeps it on through the root config.
+		"noUncheckedIndexedAccess": false
+	}
+}
