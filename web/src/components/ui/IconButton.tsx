@@ -9,7 +9,8 @@ type Size = "sm" | "md" | "lg";
 
 const VARIANT: Record<Variant, string> = {
   ghost: "text-secondary hover:bg-subtle hover:text-primary active:bg-muted",
-  outline: "bg-surface border border-strong text-secondary hover:bg-subtle hover:text-primary",
+  outline:
+    "bg-surface border border-strong text-secondary hover:bg-subtle hover:text-primary active:bg-muted",
 };
 
 const SIZE: Record<Size, string> = {
@@ -32,7 +33,9 @@ export function IconButton({
   variant = "ghost",
   size = "md",
   loading = false,
+  disabled = false,
   className,
+  onClick,
   ...rest
 }: IconButtonProps) {
   return (
@@ -41,10 +44,13 @@ export function IconButton({
       aria-label={label}
       title={label}
       aria-busy={loading || undefined}
+      aria-disabled={disabled || undefined}
+      onClick={disabled ? undefined : onClick}
       className={cn(
         "inline-grid place-items-center transition-colors duration-[120ms]",
         SIZE[size],
         VARIANT[variant],
+        disabled && (variant === "outline" ? "border-default text-disabled" : "text-disabled"),
         className,
       )}
       {...rest}

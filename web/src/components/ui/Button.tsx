@@ -11,12 +11,20 @@ type Size = "sm" | "md" | "lg";
 
 const VARIANT: Record<Variant, string> = {
   primary:
-    "bg-accent text-on-accent shadow-xs hover:bg-accent-hover hover:shadow-ink active:bg-accent-active",
+    "bg-accent text-on-accent shadow-xs hover:bg-accent-hover hover:shadow-ink active:bg-accent-active active:translate-y-[0.5px]",
   secondary:
     "bg-surface text-primary border border-strong shadow-xs hover:bg-subtle active:bg-muted",
   ghost: "text-secondary hover:bg-subtle hover:text-primary active:bg-muted",
   danger: "bg-danger text-on-accent hover:bg-danger-hover active:bg-danger-active",
-  "danger-ghost": "text-danger-text hover:bg-danger-subtle",
+  "danger-ghost": "text-danger-text hover:bg-danger-subtle active:translate-y-[0.5px]",
+};
+
+const DISABLED: Record<Variant, string> = {
+  primary: "bg-muted text-disabled shadow-none",
+  secondary: "bg-surface border-default text-disabled shadow-none",
+  ghost: "bg-transparent text-disabled",
+  danger: "bg-muted text-disabled shadow-none",
+  "danger-ghost": "bg-transparent text-disabled",
 };
 
 const SIZE: Record<Size, string> = {
@@ -63,12 +71,12 @@ export function Button({
         VARIANT[variant],
         mark && "gap-2 py-1 pl-1 pr-3.5",
         inert && "cursor-not-allowed",
-        disabled && "bg-muted text-disabled shadow-none",
+        disabled && DISABLED[variant],
         className,
       )}
       {...rest}
     >
-      {mark && Icon ? (
+      {mark && Icon && variant === "primary" ? (
         <span className="bg-mark grid size-7 place-items-center rounded-xs text-mark-ink">
           {loading ? (
             <LoaderCircle aria-hidden className="size-3.5 animate-spin" />
@@ -82,7 +90,9 @@ export function Button({
         <Icon aria-hidden className="size-4" strokeWidth={1.75} />
       ) : null}
       {children}
-      {kbd ? <Kbd className="ml-1.5 bg-white/20 text-on-accent">{kbd}</Kbd> : null}
+      {kbd ? (
+        <Kbd className="ml-1.5 hidden bg-white/[0.18] text-on-accent lg:inline-flex">{kbd}</Kbd>
+      ) : null}
     </button>
   );
 }
