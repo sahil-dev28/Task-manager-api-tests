@@ -34,6 +34,12 @@ describe("Button", () => {
     rerender(<Button leadingIcon={Plus}>New task</Button>);
     expect(document.querySelector(".bg-mark")).toBeNull();
   });
+
+  it("keeps the mark chip while loading so the button does not shrink", () => {
+    render(<Button mark loading leadingIcon={Plus}>New task</Button>);
+    expect(document.querySelector(".bg-mark")).not.toBeNull();
+    expect(screen.getByRole("button", { name: /New task/ })).toHaveAttribute("aria-busy", "true");
+  });
 });
 
 describe("IconButton", () => {

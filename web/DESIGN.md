@@ -417,7 +417,7 @@ Conventions for every interactive component unless stated otherwise:
 
 ### 4.1 Button
 
-Anatomy (left to right): [leading icon 16px, optional] · 6px · [label] · 6px · [trailing kbd chip, optional, ≥1024px only]. When loading: [spinner 16px] replaces the leading icon (or is inserted before the label if no icon), label stays, width is locked to its pre-loading width so it never jumps.
+Anatomy (left to right): [leading icon 16px, optional] · 6px · [label] · 6px · [trailing kbd chip, optional, ≥1024px only]. When loading: [spinner 16px] replaces the leading icon, label stays. On the mark variant the spinner renders *inside* the chip rather than replacing it, so the button keeps its width without measuring. A button with no leading icon gains the spinner before its label and is the one case where width changes.
 
 | Size | Height | Horizontal padding | Font | Icon | Radius |
 |---|---|---|---|---|---|
@@ -427,7 +427,7 @@ Anatomy (left to right): [leading icon 16px, optional] · 6px · [label] · 6px 
 
 `lg` is used only in the empty state. Everything else is `md` unless noted.
 
-**The mark chip.** The primary "New task" button carries the amber chip (2.3) as its leading element instead of a plain icon: a 28×28px square at `radius-xs`, `mark-gradient` fill, `Plus` icon 14px in `mark-ink`, sitting inside the button's left padding (button padding becomes 5px left, 15px right at `md`). No other button variant has it, and the chip is the only place a `md` primary button differs from the table above.
+**The mark chip.** The primary "New task" button carries the amber chip (2.3) as its leading element instead of a plain icon: a 28×28px square at `radius-xs`, `mark-gradient` fill, `Plus` icon 14px in `mark-ink`, sitting inside the button's left padding (button padding becomes 4px left, 14px right at `md` — 4px is what centres a 28px chip in a 36px button, and 14px right is the standard `md` padding from the table above). No other button variant has it, and the chip is the only place a `md` primary button differs from the table above.
 
 | Variant | Default | Hover | Active (pressed) | Disabled |
 |---|---|---|---|---|

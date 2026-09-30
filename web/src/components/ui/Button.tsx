@@ -68,12 +68,16 @@ export function Button({
       )}
       {...rest}
     >
-      {loading ? (
-        <LoaderCircle aria-hidden className="size-4 animate-spin" />
-      ) : mark && Icon ? (
+      {mark && Icon ? (
         <span className="bg-mark grid size-7 place-items-center rounded-xs text-mark-ink">
-          <Icon aria-hidden className="size-3.5" strokeWidth={2} />
+          {loading ? (
+            <LoaderCircle aria-hidden className="size-3.5 animate-spin" />
+          ) : (
+            <Icon aria-hidden className="size-3.5" strokeWidth={2} />
+          )}
         </span>
+      ) : loading ? (
+        <LoaderCircle aria-hidden className="size-4 animate-spin" />
       ) : Icon ? (
         <Icon aria-hidden className="size-4" strokeWidth={1.75} />
       ) : null}
