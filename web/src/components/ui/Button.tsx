@@ -1,100 +1,66 @@
-import type { LucideIcon } from "lucide-react";
-import { LoaderCircle } from "lucide-react";
-import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "cn"
+import { Slot } from "radix-ui"
 
-import { cn } from "@/lib/cn";
+const buttonVariants = cva(
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        outline:
+          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+        ghost:
+          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+        destructive:
+          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default:
+          "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        icon: "size-8",
+        "icon-xs":
+          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm":
+          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
+        "icon-lg": "size-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
 
-import { Kbd } from "./Kbd";
-
-type Variant = "primary" | "secondary" | "ghost" | "danger" | "danger-ghost";
-type Size = "sm" | "md" | "lg";
-
-const VARIANT: Record<Variant, string> = {
-  primary:
-    "bg-accent text-on-accent shadow-xs hover:bg-accent-hover hover:shadow-ink active:bg-accent-active active:translate-y-[0.5px]",
-  secondary:
-    "bg-surface text-primary border border-strong shadow-xs hover:bg-subtle active:bg-muted",
-  ghost: "text-secondary hover:bg-subtle hover:text-primary active:bg-muted",
-  danger: "bg-danger text-on-accent hover:bg-danger-hover active:bg-danger-active",
-  "danger-ghost": "text-danger-text hover:bg-danger-subtle active:translate-y-[0.5px]",
-};
-
-const DISABLED: Record<Variant, string> = {
-  primary: "bg-muted text-disabled shadow-none",
-  secondary: "bg-surface border-default text-disabled shadow-none",
-  ghost: "bg-transparent text-disabled",
-  danger: "bg-muted text-disabled shadow-none",
-  "danger-ghost": "bg-transparent text-disabled",
-};
-
-const SIZE: Record<Size, string> = {
-  sm: "h-7 px-2.5 text-caption rounded-xs",
-  md: "h-9 px-3.5 text-body-strong rounded-sm",
-  lg: "h-10 px-4 text-body-strong rounded-sm",
-};
-
-export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  ref?: Ref<HTMLButtonElement>;
-  variant?: Variant;
-  size?: Size;
-  loading?: boolean;
-  leadingIcon?: LucideIcon;
-  /** DESIGN 4.1: only the primary "New task" button carries the amber chip. */
-  mark?: boolean;
-  kbd?: string;
-  children?: ReactNode;
-};
-
-export function Button({
-  variant = "secondary",
-  size = "md",
-  loading = false,
-  leadingIcon: Icon,
-  mark = false,
-  kbd,
-  disabled = false,
+function Button({
   className,
-  children,
-  onClick,
-  ...rest
-}: ButtonProps) {
-  const inert = disabled || loading;
-  const showMark = mark && variant === "primary";
+  variant = "default",
+  size = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot.Root : "button"
 
   return (
-    <button
-      type="button"
-      aria-busy={loading || undefined}
-      aria-disabled={disabled || undefined}
-      onClick={inert ? undefined : onClick}
-      className={cn(
-        "inline-flex select-none items-center gap-1.5 font-sans transition-[background-color,border-color,color,box-shadow] duration-[120ms]",
-        SIZE[size],
-        VARIANT[variant],
-        showMark && "gap-2 py-1 pl-1 pr-3.5",
-        inert && "cursor-not-allowed",
-        disabled && DISABLED[variant],
-        className,
-      )}
-      {...rest}
-    >
-      {showMark && Icon ? (
-        <span className="bg-mark grid size-7 place-items-center rounded-xs text-mark-ink">
-          {loading ? (
-            <LoaderCircle aria-hidden data-motion="spinner" className="size-3.5 animate-spinner" />
-          ) : (
-            <Icon aria-hidden className="size-3.5" strokeWidth={2} />
-          )}
-        </span>
-      ) : loading ? (
-        <LoaderCircle aria-hidden data-motion="spinner" className="size-4 animate-spinner" />
-      ) : Icon ? (
-        <Icon aria-hidden className="size-4" strokeWidth={1.75} />
-      ) : null}
-      {children}
-      {kbd ? (
-        <Kbd className="ml-1.5 hidden bg-white/[0.18] text-on-accent lg:inline-flex">{kbd}</Kbd>
-      ) : null}
-    </button>
-  );
+    <Comp
+      data-slot="button"
+      data-variant={variant}
+      data-size={size}
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
 }
+
+export { Button, buttonVariants }
