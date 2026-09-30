@@ -17,7 +17,7 @@ const setup = (props: Partial<Props> = {}) => {
     onShowAll: vi.fn(),
     onRetry: vi.fn(),
   };
-  render(
+  const { container } = render(
     <MemoryRouter>
       <TaskList
         tasks={[makeTask(), makeTask()]}
@@ -31,7 +31,7 @@ const setup = (props: Partial<Props> = {}) => {
       />
     </MemoryRouter>,
   );
-  return handlers;
+  return { ...handlers, container };
 };
 
 describe("TaskList", () => {
@@ -41,9 +41,15 @@ describe("TaskList", () => {
   });
 
   it("shows skeletons and marks the region busy while first loading", () => {
-    setup({ isLoading: true, tasks: [] });
+    const { container } = setup({ isLoading: true, tasks: [] });
     expect(screen.getByLabelText("Loading tasks")).toBeInTheDocument();
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(container.querySelector("#tasks")).not.toBeNull();
+  });
+
+  it("keeps the skip-link target present when there are no tasks", () => {
+    const { container } = setup({ tasks: [] });
+    expect(container.querySelector("#tasks")).not.toBeNull();
   });
 
   it("shows the no-tasks empty state with both actions", async () => {

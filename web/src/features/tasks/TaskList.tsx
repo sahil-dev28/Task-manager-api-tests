@@ -50,41 +50,42 @@ export function TaskList({
   samplesLoading?: boolean;
   busyIds?: Set<string>;
 }) {
+  let content;
+
   if (isLoading) {
-    return (
-      <div aria-busy="true" aria-label="Loading tasks" className="mt-3 flex flex-col gap-2">
+    content = (
+      <div aria-busy="true" aria-label="Loading tasks" className="flex flex-col gap-2">
         {SKELETON_WIDTHS.map((width, index) => (
           <TaskCardSkeleton key={index} width={width} />
         ))}
       </div>
     );
-  }
-
-  if (isError) return <div className="mt-3"><LoadErrorEmpty message={error} onRetry={onRetry} /></div>;
-
-  if (tasks.length === 0) {
-    return (
-      <div className="mt-3">
-        {activeStatus ? (
-          <FilterEmpty status={activeStatus} onShowAll={onShowAll} />
-        ) : (
-          <NoTasksEmpty onNewTask={onNewTask} onAddSamples={onAddSamples} samplesLoading={samplesLoading} />
-        )}
-      </div>
+  } else if (isError) {
+    content = <LoadErrorEmpty message={error} onRetry={onRetry} />;
+  } else if (tasks.length === 0) {
+    content = activeStatus ? (
+      <FilterEmpty status={activeStatus} onShowAll={onShowAll} />
+    ) : (
+      <NoTasksEmpty onNewTask={onNewTask} onAddSamples={onAddSamples} samplesLoading={samplesLoading} />
+    );
+  } else {
+    content = (
+      <ul
+        aria-busy={isDimmed || undefined}
+        className={cn("flex flex-col gap-2 transition-opacity duration-[160ms]", isDimmed && "opacity-60")}
+      >
+        {tasks.map((task) => (
+          <li key={task.id}>
+            <TaskCard task={task} onComplete={onComplete} busy={busyIds?.has(task.id)} />
+          </li>
+        ))}
+      </ul>
     );
   }
 
   return (
-    <ul
-      id="tasks"
-      aria-busy={isDimmed || undefined}
-      className={cn("mt-3 flex flex-col gap-2 transition-opacity duration-[160ms]", isDimmed && "opacity-60")}
-    >
-      {tasks.map((task) => (
-        <li key={task.id}>
-          <TaskCard task={task} onComplete={onComplete} busy={busyIds?.has(task.id)} />
-        </li>
-      ))}
-    </ul>
+    <div id="tasks" className="mt-3">
+      {content}
+    </div>
   );
 }
