@@ -1,6 +1,6 @@
-import { act, render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ThemeProvider, useTheme } from "./theme";
 
@@ -54,12 +54,22 @@ describe("ThemeProvider", () => {
     expect(document.documentElement).toHaveClass("dark");
   });
 
-  it("suppresses transitions for one frame on switch", async () => {
-    render(<ThemeProvider><Probe /></ThemeProvider>);
-    await act(async () => {
+  it("adds the no-transition class synchronously on switch", async () => {
+    // Stub rAF so the cleanup never runs; the class must still be on <html>.
+    const raf = vi.spyOn(window, "requestAnimationFrame").mockImplementation(() => 0 as unknown as number);
+    try {
+      render(<ThemeProvider><Probe /></ThemeProvider>);
       await userEvent.click(screen.getByRole("button", { name: "Dark" }));
-    });
-    // The class is added synchronously and cleared on the next frame.
-    expect(document.documentElement.className).not.toContain("no-transition");
+      expect(document.documentElement).toHaveClass("no-transition");
+      expect(raf).toHaveBeenCalled();
+    } finally {
+      raf.mockRestore();
+    }
+  });
+
+  it("clears the no-transition class on the next frame", async () => {
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+    await userEvent.click(screen.getByRole("button", { name: "Dark" }));
+    await waitFor(() => expect(document.documentElement).not.toHaveClass("no-transition"));
   });
 });

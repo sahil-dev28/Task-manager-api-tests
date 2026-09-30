@@ -33,7 +33,7 @@ export function AppShell({ children, onNewTask }: { children: ReactNode; onNewTa
         Skip to tasks
       </a>
 
-      <header className="sticky top-0 z-20 h-14 border-b border-default bg-surface">
+      <header className="sticky top-0 z-20 h-14 border-b border-default bg-surface/85 backdrop-blur-[8px] backdrop-saturate-[1.8]">
         <div className="mx-auto flex h-full max-w-[960px] items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.03em]">
             <span className="bg-mark grid size-6 place-items-center rounded-xs text-mark-ink">
@@ -44,7 +44,20 @@ export function AppShell({ children, onNewTask }: { children: ReactNode; onNewTa
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button variant="primary" mark leadingIcon={Plus} onClick={onNewTask}>
+            <IconButton
+              label="New task"
+              icon={Plus}
+              size="lg"
+              onClick={onNewTask}
+              className="sm:hidden"
+            />
+            <Button
+              variant="primary"
+              mark
+              leadingIcon={Plus}
+              onClick={onNewTask}
+              className="hidden sm:inline-flex"
+            >
               New task
             </Button>
           </div>
