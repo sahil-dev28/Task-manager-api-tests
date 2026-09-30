@@ -9,6 +9,22 @@
 @keyframes spinner {
   to { transform: rotate(360deg); }
 }
+@keyframes overlay-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes menu-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
 
 :root {
   /* 2.2 Semantic neutral tokens */
@@ -242,6 +258,10 @@
   /* 2.13 Motion */
   --animate-skeleton-pulse: skeleton-pulse 1400ms linear infinite alternate;
   --animate-spinner: spinner 700ms linear infinite;
+  --animate-overlay-in: overlay-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-scrim-in: scrim-in 240ms cubic-bezier(0.2, 0, 0, 1);
+  --animate-toast-in: toast-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-menu-in: menu-in 120ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 @layer base {
@@ -265,6 +285,23 @@
   :focus-visible {
     outline: 2px solid var(--c-focus-ring);
     outline-offset: 2px;
+  }
+  /* Tailwind v4 leaves buttons on the default arrow cursor. Anything that acts
+     on click gets the pointer back; anything switched off says so. */
+  button,
+  [role="button"],
+  [role="radio"],
+  [role="checkbox"],
+  [role="menuitem"],
+  select,
+  input[type="date"],
+  label[for] {
+    cursor: pointer;
+  }
+  button:disabled,
+  button[aria-disabled="true"],
+  [role="radiogroup"][aria-disabled="true"] [role="radio"] {
+    cursor: not-allowed;
   }
   @media (prefers-reduced-motion: reduce) {
     *,
