@@ -1,9 +1,9 @@
 import { HttpResponse, http } from "msw";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { server } from "@/test/server";
 
-import { ApiError, NetworkError, request } from "./client";
+import { ApiError, NetworkError, REQUEST_TIMEOUT_MS, request } from "./client";
 
 const url = "http://localhost:3000/thing";
 
@@ -37,7 +37,9 @@ describe("request", () => {
 
   it("throws NetworkError when the request cannot reach the server", async () => {
     server.use(http.get(url, () => HttpResponse.error()));
-    await expect(request("/thing")).rejects.toBeInstanceOf(NetworkError);
+    const err: unknown = await request("/thing").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(NetworkError);
+    expect(err).toMatchObject({ message: "Could not reach the server" });
   });
 
   it("rethrows an external abort as AbortError, not NetworkError", async () => {
@@ -56,5 +58,20 @@ describe("request", () => {
     if (!(err instanceof ApiError)) throw new Error("expected an ApiError");
     expect(err.status).toBe(404);
     expect(err.message).toBe("Task not found");
+  });
+
+  it("turns its own timeout into a NetworkError, not a leaked AbortError", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      // A handler that never settles, so only the timeout can end this request.
+      server.use(http.get(url, () => new Promise<never>(() => {})));
+
+      const pending = request("/thing");
+      const assertion = expect(pending).rejects.toBeInstanceOf(NetworkError);
+      await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS);
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
