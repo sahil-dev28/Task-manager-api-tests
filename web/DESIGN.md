@@ -545,7 +545,7 @@ Meta row items in order (each only when applicable):
 1. Status badge (always).
 2. Due date (when `dueDate !== null`): `Calendar` 14px + text, `mono` uppercase, `text-secondary`. Overdue variant: `TriangleAlert` 14px + "OVERDUE · SEP 28", both `warning-text`.
 3. Assignee chip (when `assignee !== null`).
-4. Completed stamp (when `status === "done"` and `completedAt !== null`): `CircleCheck` 14px + "Completed Sep 30", `caption`, `text-tertiary`.
+4. Completed stamp (when `status === "done"` and `completedAt !== null`): `CircleCheck` 14px + "COMPLETED SEP 30", `mono` uppercase, `text-tertiary`. Same scale as the due date beside it — §2.8 puts every meta-row date in `mono`.
 
 Date text format for all relative dates: "Today", "Tomorrow", "Yesterday"; otherwise "Sep 28"; if not the current year, "Sep 28, 2027". Month is short English (`en-US`, `month: "short", day: "numeric"`).
 

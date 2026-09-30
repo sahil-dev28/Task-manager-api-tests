@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
@@ -73,5 +73,48 @@ describe("TaskCard", () => {
   it("disables its controls while a mutation on this task is in flight", () => {
     setup(makeTask(), { busy: true });
     expect(screen.getByRole("checkbox")).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("blocks the more-actions button while a mutation is in flight", async () => {
+    const onOpenMenu = vi.fn();
+    render(
+      <MemoryRouter>
+        <TaskCard task={makeTask()} now={NOW} onComplete={() => {}} onOpenMenu={onOpenMenu} busy />
+      </MemoryRouter>,
+    );
+    const more = screen.getByRole("button", { name: "More actions" });
+    expect(more).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(more);
+    expect(onOpenMenu).not.toHaveBeenCalled();
+  });
+
+  it("exposes exactly three tab stops and keeps the card itself out of the tab order", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <TaskCard
+          task={makeTask({ assignee: "Priya Sharma" })}
+          now={NOW}
+          onComplete={() => {}}
+          onOpenMenu={() => {}}
+        />
+      </MemoryRouter>,
+    );
+    expect(container.querySelector("article")).not.toHaveAttribute("tabindex");
+    const focusable = container.querySelectorAll("button, a[href]");
+    expect(focusable).toHaveLength(3);
+  });
+
+  it("strikes the title and hides a populated description when done", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <TaskCard
+          task={makeTask({ status: "done", completedAt: NOW.toISOString(), description: "Some detail" })}
+          now={NOW}
+          onComplete={() => {}}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("link").className).toContain("line-through");
+    expect(container.querySelector("[data-description]")).toBeNull();
   });
 });

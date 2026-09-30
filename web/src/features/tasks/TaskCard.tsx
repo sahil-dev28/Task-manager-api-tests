@@ -32,9 +32,9 @@ export function TaskCard({
     <article
       aria-busy={busy || undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-md border bg-surface px-4 py-3.5 shadow-xs",
+        "group relative flex min-h-16 items-center rounded-md border bg-surface px-4 py-3.5 shadow-xs",
         "transition-[border-color,box-shadow] duration-[160ms] hover:border-strong hover:shadow-sm",
-        selected ? "border-accent/40 bg-accent-subtle" : "border-default",
+        selected ? "border-accent/40 bg-accent-subtle/50" : "border-default",
         busy && "pointer-events-none opacity-60",
       )}
     >
@@ -44,16 +44,24 @@ export function TaskCard({
         aria-checked={done}
         aria-disabled={done || busy || undefined}
         aria-label={`Mark “${task.title}” complete`}
+        title={done ? "Completed. Change status from the task menu to reopen." : undefined}
         onClick={() => !done && !busy && onComplete(task)}
-        className={cn(
-          "z-10 grid size-[18px] shrink-0 place-items-center rounded-full border-[1.5px] transition-colors duration-[160ms]",
-          done ? "border-success bg-success text-surface" : "border-input hover:border-accent",
-        )}
+        className="group/checkbox z-10 -m-[9px] grid size-9 shrink-0 place-items-center"
       >
-        {done ? <Check aria-hidden className="size-3" strokeWidth={3} /> : null}
+        <span
+          aria-hidden
+          className={cn(
+            "grid size-[18px] place-items-center rounded-full border-[1.5px] transition-colors duration-[160ms]",
+            done
+              ? "border-success bg-success text-surface"
+              : "border-input group-hover/checkbox:border-accent",
+          )}
+        >
+          {done ? <Check className="size-3" strokeWidth={3} /> : null}
+        </span>
       </button>
 
-      <div className="min-w-0 flex-1">
+      <div className="ml-3 min-w-0 flex-1">
         <Link
           to={`/tasks/${task.id}`}
           aria-label={taskAccessibleName(task, now)}
@@ -101,7 +109,9 @@ export function TaskCard({
         </div>
       </div>
 
-      <PriorityIndicator priority={task.priority} />
+      <span className="pointer-events-none ml-4">
+        <PriorityIndicator priority={task.priority} />
+      </span>
 
       {onOpenMenu ? (
         <IconButton
@@ -110,7 +120,7 @@ export function TaskCard({
           size="sm"
           disabled={busy}
           onClick={() => onOpenMenu(task)}
-          className="z-10 md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+          className="z-10 ml-2 md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:group-focus-within:opacity-100"
         />
       ) : null}
     </article>
