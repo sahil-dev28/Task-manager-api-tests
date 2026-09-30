@@ -126,3 +126,30 @@ you have to run the arithmetic against a known fixture.
 4. Should reassignment be audited? It currently overwrites silently, which is
    right for a task tracker and wrong for anything with accountability
    requirements.
+
+## Frontend
+
+A React client for the API lives in `web/`. It is additive: nothing under `task-api/`
+changed except `CORS_ORIGIN` in `.env.example`, which now points at the client's dev
+server. The backend deliverables above are unchanged.
+
+```bash
+cd task-api && cp .env.example .env && npm start   # API on :3000, CORS open to :5173
+cd web && npm install && npm run dev                # client on :5173
+cd web && npm test                                  # 162 tests, Vitest + MSW
+```
+
+**What it does:** the read path. Stat tiles with an overdue warning, a status filter and
+paging held in the URL so a reload or a shared link restores the view, a task list with
+first-load skeletons, three distinct empty states and a load-error state, light and dark
+themes, a keyboard-navigable filter, screen-reader names on every card, and live-region
+announcements for list changes. The three write actions on screen — New task, Add sample
+tasks, and the complete checkbox — are deliberately inert. The write path, the detail
+sheet, and offline handling are specified in `web/DESIGN.md` but not built.
+
+**Stack:** Vite, React, TypeScript, Tailwind v4, TanStack Query, React Router.
+
+**One design note worth knowing:** the pager is Previous / Next with no page count. The
+API returns bare arrays with no `total`, so the client fetches page N+1 alongside page N
+and enables Next only if that lookahead came back non-empty — exact, at the cost of one
+extra request, rather than a guessed "of N".
