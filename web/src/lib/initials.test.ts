@@ -8,7 +8,7 @@ describe("getInitials", () => {
     ["alex", "A"],
     ["Mary Jane Watson", "MW"],
     ["  Ada  Lovelace  ", "AL"],
-    ["7 of nine", "7E"],
+    ["7 of nine", "7N"],
   ])("maps %s to %s", (name, expected) => {
     expect(getInitials(name)).toEqual({ kind: "text", value: expected });
   });

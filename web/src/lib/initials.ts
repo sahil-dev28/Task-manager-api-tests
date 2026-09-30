@@ -12,17 +12,6 @@ export function getInitials(name: string): Initials {
   const first = words[0]![0]!;
   if (!/[\p{L}\p{N}]/u.test(first)) return { kind: "icon" };
 
-  if (words.length === 1) {
-    return { kind: "text", value: first.toUpperCase() };
-  }
-
-  // For digit-starting multi-word names, use last character of last word
-  if (/^\d+$/.test(words[0]!)) {
-    const lastChar = words[words.length - 1]!.slice(-1);
-    return { kind: "text", value: `${first}${lastChar}`.toUpperCase() };
-  }
-
-  // Standard rule: first character of first and last word
-  const value = `${first}${words[words.length - 1]![0]!}`;
+  const value = words.length === 1 ? first : `${first}${words[words.length - 1]![0]!}`;
   return { kind: "text", value: value.toUpperCase() };
 }
