@@ -1,7 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ApiError } from "@/api/client";
+import { listAnnouncement, useAnnounce } from "@/app/LiveRegion";
+import { useDocumentTitle } from "@/app/useDocumentTitle";
 
 import { Pagination } from "./Pagination";
 import { StatsRow } from "./StatsRow";
@@ -25,6 +27,14 @@ export function OverviewPage() {
 
   // Transient UI intent, not URL state: which pager button was last clicked.
   const [pendingDirection, setPendingDirection] = useState<"previous" | "next" | null>(null);
+
+  // DESIGN 5.1 and 8.4: mirror the overdue count in the title, announce list changes.
+  const announce = useAnnounce();
+  useDocumentTitle(stats.data?.overdue);
+  useEffect(() => {
+    const message = listAnnouncement({ isLoading: firstLoad, count: tasks.length, status, page });
+    if (message) announce(message);
+  }, [announce, firstLoad, tasks.length, status, page]);
 
   return (
     <>
