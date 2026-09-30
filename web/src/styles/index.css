@@ -3,6 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  /* 2.2 Semantic neutral tokens */
   --c-canvas: #EEF0F2;
   --c-surface: #FFFFFF;
   --c-raised: #FFFFFF;
@@ -20,6 +21,7 @@
   --c-text-inverse: #EEF0F2;
   --c-scrim: rgba(11, 11, 12, 0.4);
 
+  /* 2.3 Accent (ink) */
   --c-accent: #0F0F10;
   --c-accent-hover: #26282D;
   --c-accent-active: #393D44;
@@ -28,6 +30,7 @@
   --c-accent-text: #0F0F10;
   --c-focus-ring: #0F0F10;
 
+  /* 2.4 Semantic colors */
   --c-blue-text: #1D4ED8;
   --c-blue-subtle: #E9F0FE;
   --c-blue-subtle-text: #1A45BE;
@@ -43,12 +46,14 @@
   --c-danger-subtle: #FDECEA;
   --c-danger-subtle-text: #A31F14;
 
+  /* 2.12 Elevation */
   --c-shadow-xs: 0 1px 2px rgba(15, 15, 16, 0.05), 0 6px 18px -12px rgba(15, 15, 16, 0.2);
   --c-shadow-sm: 0 1px 2px rgba(15, 15, 16, 0.05), 0 10px 28px -14px rgba(15, 15, 16, 0.26);
   --c-shadow-md: 0 4px 12px -4px rgba(15, 15, 16, 0.1), 0 16px 36px -20px rgba(15, 15, 16, 0.28);
   --c-shadow-lg: 0 8px 20px -8px rgba(15, 15, 16, 0.14), 0 28px 60px -32px rgba(15, 15, 16, 0.45);
   --c-shadow-ink: 0 6px 20px -8px rgba(15, 15, 16, 0.35);
 
+  /* 2.14 Avatar, 2.15 Watermark, and other themed tokens */
   --c-watermark: rgba(15, 15, 16, 0.035);
   --c-segment-active: #FFFFFF;
   --c-mark-ink: #3A2405;
@@ -56,6 +61,7 @@
 }
 
 .dark {
+  /* 2.2 Semantic neutral tokens */
   --c-canvas: #0B0B0C;
   --c-surface: #151619;
   --c-raised: #1E2025;
@@ -73,6 +79,7 @@
   --c-text-inverse: #FAFAFA;
   --c-scrim: rgba(0, 0, 0, 0.66);
 
+  /* 2.3 Accent (ink) */
   --c-accent: #FAFAFA;
   --c-accent-hover: #E3E4E7;
   --c-accent-active: #CBCDD2;
@@ -81,6 +88,7 @@
   --c-accent-text: #FAFAFA;
   --c-focus-ring: #FAFAFA;
 
+  /* 2.4 Semantic colors */
   --c-blue-text: #9EC2FF;
   --c-blue-subtle: #16233D;
   --c-blue-subtle-text: #AECBFF;
@@ -96,6 +104,7 @@
   --c-danger-subtle: #3A1712;
   --c-danger-subtle-text: #FFA593;
 
+  /* 2.12 Elevation */
   --c-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
   --c-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.55), 0 10px 28px -14px rgba(0, 0, 0, 0.65),
     inset 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -105,13 +114,21 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.07);
   --c-shadow-ink: 0 6px 20px -8px rgba(0, 0, 0, 0.7);
 
+  /* 2.14 Avatar, 2.15 Watermark, and other themed tokens */
   --c-watermark: rgba(255, 255, 255, 0.035);
   --c-segment-active: #393D44;
   --c-mark-ink: #3A2405;
   --c-avatar-ink: #5A3A05;
 }
 
+/* Tailwind v4 shares one --color-* namespace: bg-x, text-x and border-x all
+   resolve to --color-x. Where two roles need different colours, the key is
+   compound and so is the class. Never use text-inverse, text-accent,
+   border-warning or text-danger — each resolves to a different DESIGN colour
+   than the role needs. Use text-inverse-fg, text-accent-text,
+   border-warning-border, text-danger-text. */
 @theme inline {
+  /* 2.2 Semantic neutral tokens */
   --color-canvas: var(--c-canvas);
   --color-surface: var(--c-surface);
   --color-raised: var(--c-raised);
@@ -126,8 +143,9 @@
   --color-tertiary: var(--c-text-tertiary);
   --color-disabled: var(--c-text-disabled);
   --color-on-accent: var(--c-text-on-accent);
-  --color-text-inverse: var(--c-text-inverse);
+  --color-inverse-fg: var(--c-text-inverse);
 
+  /* 2.3 Accent (ink) */
   --color-accent: var(--c-accent);
   --color-accent-hover: var(--c-accent-hover);
   --color-accent-active: var(--c-accent-active);
@@ -136,6 +154,7 @@
   --color-accent-text: var(--c-accent-text);
   --color-focus: var(--c-focus-ring);
 
+  /* 2.4 Semantic colors */
   --color-blue-text: var(--c-blue-text);
   --color-blue-subtle: var(--c-blue-subtle);
   --color-blue-subtle-text: var(--c-blue-subtle-text);
@@ -155,6 +174,7 @@
   --color-mark-ink: var(--c-mark-ink);
   --color-avatar-ink: var(--c-avatar-ink);
 
+  /* 2.8 Typography */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, "Liberation Mono", monospace;
@@ -198,11 +218,13 @@
   --text-overline--letter-spacing: 0.06em;
   --text-overline--font-weight: 500;
 
+  /* 2.10 Radii */
   --radius-xs: 7px;
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 20px;
 
+  /* 2.12 Elevation */
   --shadow-xs: var(--c-shadow-xs);
   --shadow-sm: var(--c-shadow-sm);
   --shadow-md: var(--c-shadow-md);
