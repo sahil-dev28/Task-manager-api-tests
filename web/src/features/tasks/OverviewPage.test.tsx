@@ -31,8 +31,13 @@ describe("OverviewPage", () => {
     renderWithProviders(<OverviewPage />);
 
     expect(await screen.findByText("Ship it")).toBeInTheDocument();
-    expect(screen.getByText("7")).toBeInTheDocument();
-    expect(screen.getByText("12")).toBeInTheDocument();
+    // Both the tile and the filter count render these numbers (DESIGN 5.2), so
+    // scope each assertion to its region rather than matching anywhere on the page.
+    expect(screen.getByRole("button", { name: /To do/ })).toHaveTextContent("7");
+    expect(screen.getByRole("button", { name: /Done/ })).toHaveTextContent("12");
+    const filter = screen.getByRole("radiogroup", { name: "Filter by status" });
+    expect(within(filter).getByRole("radio", { name: /To do/ })).toHaveTextContent("7");
+    expect(within(filter).getByRole("radio", { name: /Done/ })).toHaveTextContent("12");
   });
 
   it("filters by status and resets to page 1", async () => {
