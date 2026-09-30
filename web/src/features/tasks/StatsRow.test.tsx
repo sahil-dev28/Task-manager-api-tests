@@ -34,7 +34,10 @@ describe("StatsRow", () => {
   it("makes the three status tiles buttons and leaves overdue inert", () => {
     setup();
     expect(screen.getAllByRole("button")).toHaveLength(3);
-    expect(screen.getByLabelText("2 overdue tasks, past due and not done")).toBeInTheDocument();
+    const overdue = screen.getByLabelText("2 overdue tasks, past due and not done");
+    expect(overdue).toBeInTheDocument();
+    expect(overdue).not.toHaveAttribute("tabindex");
+    expect(overdue.tagName).not.toBe("BUTTON");
   });
 
   it("selects a status when a tile is activated", async () => {
@@ -54,14 +57,26 @@ describe("StatsRow", () => {
     expect(screen.getByRole("button", { name: /Done/ })).toHaveAttribute("aria-pressed", "true");
   });
 
+  it("marks unselected tiles not pressed", () => {
+    setup({ activeStatus: "done" });
+    expect(screen.getByRole("button", { name: /To do/ })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: /In progress/ })).toHaveAttribute("aria-pressed", "false");
+  });
+
   it("shows the zero footnote when nothing is overdue", () => {
     setup({ stats: makeStats() });
     expect(screen.getByText("NOTHING PAST DUE")).toBeInTheDocument();
   });
 
+  it("uses the singular for exactly one overdue task", () => {
+    setup({ stats: makeStats({ overdue: 1 }) });
+    expect(screen.getByLabelText("1 overdue task, past due and not done")).toBeInTheDocument();
+  });
+
   it("shows skeletons while loading", () => {
     setup({ isLoading: true, stats: undefined });
     expect(screen.queryByText("7")).not.toBeInTheDocument();
+    expect(document.querySelector('[data-motion="skeleton"]')).not.toBeNull();
   });
 
   it("offers a retry when stats fail", async () => {

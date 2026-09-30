@@ -54,14 +54,14 @@ export function StatTile({
       )}
 
       {loading ? (
-        <div className="mt-2">
+        <div className="mt-1">
           <SkeletonLine width={96} />
         </div>
       ) : (
         <span
           className={cn(
-            "mt-2 block font-mono text-mono uppercase",
-            error ? "text-danger-text" : "text-tertiary",
+            "mt-1 block font-mono text-mono uppercase",
+            error ? "text-danger-text" : tone === "warning" ? "text-secondary" : "text-tertiary",
           )}
         >
           {error ? "Couldn't load" : footnote}

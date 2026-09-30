@@ -31,7 +31,7 @@ export function StatsRow({
     <section aria-label="Overview" className="mt-6">
       {isError ? (
         <div className="mb-2 flex justify-end">
-          <button type="button" onClick={onRetry} className="font-mono text-mono text-accent-text underline">
+          <button type="button" onClick={onRetry} className="text-caption text-accent-text underline">
             Retry
           </button>
         </div>
