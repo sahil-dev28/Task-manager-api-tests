@@ -1,21 +1,35 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router";
 
 import { ApiError } from "@/api/client";
+import { listTasks } from "@/api/tasks";
+import type { Task } from "@/api/types";
 import { listAnnouncement, useAnnounce } from "@/app/LiveRegion";
+import { useToast } from "@/app/toast";
 import { useDocumentTitle } from "@/app/useDocumentTitle";
 
+import { DeleteDialog } from "./DeleteDialog";
+import { useNewTask } from "./NewTaskProvider";
 import { Pagination } from "./Pagination";
 import { StatsRow } from "./StatsRow";
+import { TaskFormModal } from "./TaskFormModal";
 import { TaskList } from "./TaskList";
 import { Toolbar } from "./Toolbar";
+import { describeFailure, useCompleteTask } from "./mutations";
 import { taskKeys, useLookahead, useStats, useTasksPage } from "./queries";
+import { useAddSampleTasks } from "./sampleTasks";
 import { rangeText, useListParams } from "./useListParams";
 
 const messageOf = (error: unknown) => (error instanceof ApiError ? error.message : null);
 
 export function OverviewPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { search } = useLocation();
+  const { id: editId } = useParams();
+  const toast = useToast();
+  const openNewTask = useNewTask();
   const { status, page, setStatus, setPage } = useListParams();
 
   const stats = useStats();
@@ -27,6 +41,10 @@ export function OverviewPage() {
 
   // Transient UI intent, not URL state: which pager button was last clicked.
   const [pendingDirection, setPendingDirection] = useState<"previous" | "next" | null>(null);
+  const [deleting, setDeleting] = useState<Task | null>(null);
+
+  const complete = useCompleteTask();
+  const samples = useAddSampleTasks();
 
   // DESIGN 5.1 and 8.4: mirror the overdue count in the title, announce list changes.
   const announce = useAnnounce();
@@ -35,6 +53,44 @@ export function OverviewPage() {
     const message = listAnnouncement({ isLoading: firstLoad, count: tasks.length, status, page });
     if (message) announce(message);
   }, [announce, firstLoad, tasks.length, status, page]);
+
+  // DESIGN 4.15: a page emptied by a delete or a completion falls back one page.
+  useEffect(() => {
+    if (list.isSuccess && !list.isFetching && tasks.length === 0 && page > 1) setPage(page - 1);
+  }, [list.isSuccess, list.isFetching, tasks.length, page, setPage]);
+
+  // /tasks/:id opens the edit form. The task is usually on the current page;
+  // a deep link that misses it fetches the whole list once (there is no GET /tasks/:id).
+  const onPage = editId ? tasks.find((task) => task.id === editId) : undefined;
+  const lookup = useQuery({
+    queryKey: ["tasks", "lookup", editId],
+    queryFn: ({ signal }) => listTasks({}, signal),
+    enabled: Boolean(editId) && !onPage && list.isSuccess,
+    gcTime: 0,
+  });
+  const editing = onPage ?? lookup.data?.find((task) => task.id === editId) ?? null;
+  const closeEdit = () => navigate({ pathname: "/", search });
+
+  useEffect(() => {
+    if (!editId || onPage || !list.isSuccess) return;
+    if (lookup.isSuccess && !lookup.data.some((task) => task.id === editId)) {
+      toast.info("That task doesn't exist anymore.", { detail: "The server may have restarted." });
+      navigate({ pathname: "/", search }, { replace: true });
+    } else if (lookup.isError) {
+      navigate({ pathname: "/", search }, { replace: true });
+    }
+  }, [editId, onPage, list.isSuccess, lookup.isSuccess, lookup.isError, lookup.data, navigate, search, toast]);
+
+  function onComplete(task: Task) {
+    complete.mutate(task, {
+      onSuccess: () => toast.success("Marked complete", { detail: task.title }),
+      onError: (error) => {
+        const failure = describeFailure(error);
+        if (failure.gone) toast.info(failure.message, { detail: failure.detail });
+        else toast.error(`Couldn't complete “${task.title}”`, { detail: failure.message });
+      },
+    });
+  }
 
   return (
     <>
@@ -67,11 +123,12 @@ export function OverviewPage() {
         isError={list.isError}
         error={messageOf(list.error)}
         activeStatus={status}
-        // The write path (create, complete, sample data) is designed in DESIGN.md §5
-        // and §6.2 but not built; these stay inert so the read path is complete on its own.
-        onComplete={() => {}}
-        onNewTask={() => {}}
-        onAddSamples={() => {}}
+        onComplete={onComplete}
+        onEdit={(task) => navigate({ pathname: `/tasks/${task.id}`, search })}
+        onDelete={setDeleting}
+        onNewTask={openNewTask}
+        onAddSamples={() => samples.mutate()}
+        samplesLoading={samples.isPending}
         onShowAll={() => setStatus(null)}
         onRetry={() => list.refetch()}
       />
@@ -94,6 +151,24 @@ export function OverviewPage() {
           }}
         />
       ) : null}
+
+      <TaskFormModal
+        open={editing !== null}
+        task={editing}
+        onClose={closeEdit}
+        onSaved={() => {
+          toast.success("Changes saved");
+          closeEdit();
+        }}
+      />
+
+      <DeleteDialog
+        task={deleting}
+        onClose={() => setDeleting(null)}
+        onDeleted={(task) => {
+          if (task.id === editId) closeEdit();
+        }}
+      />
     </>
   );
 }

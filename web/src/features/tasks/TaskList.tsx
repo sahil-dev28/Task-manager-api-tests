@@ -29,6 +29,8 @@ export function TaskList({
   error,
   activeStatus,
   onComplete,
+  onEdit,
+  onDelete,
   onNewTask,
   onAddSamples,
   onShowAll,
@@ -43,6 +45,8 @@ export function TaskList({
   error: string | null;
   activeStatus: TaskStatus | null;
   onComplete: (task: Task) => void;
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
   onNewTask: () => void;
   onAddSamples: () => void;
   onShowAll: () => void;
@@ -76,7 +80,13 @@ export function TaskList({
       >
         {tasks.map((task) => (
           <li key={task.id}>
-            <TaskCard task={task} onComplete={onComplete} busy={busyIds?.has(task.id)} />
+            <TaskCard
+              task={task}
+              onComplete={onComplete}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              busy={busyIds?.has(task.id)}
+            />
           </li>
         ))}
       </ul>

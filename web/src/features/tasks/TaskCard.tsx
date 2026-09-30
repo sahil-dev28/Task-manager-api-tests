@@ -1,9 +1,9 @@
-import { Calendar, Check, CircleCheck, Ellipsis, TriangleAlert } from "lucide-react";
-import { Link } from "react-router";
+import { Calendar, Check, CircleCheck, Ellipsis, Pencil, Trash2, TriangleAlert } from "lucide-react";
+import { Link, useLocation } from "react-router";
 
 import type { Task } from "@/api/types";
 import { AssigneeChip } from "@/components/ui/AssigneeChip";
-import { IconButton } from "@/components/ui/IconButton";
+import { Menu, type MenuItem } from "@/components/ui/Menu";
 import { PriorityIndicator } from "@/components/ui/PriorityIndicator";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/cn";
@@ -14,19 +14,31 @@ export function TaskCard({
   task,
   now = new Date(),
   onComplete,
-  onOpenMenu,
+  onEdit,
+  onDelete,
   busy = false,
   selected = false,
 }: {
   task: Task;
   now?: Date;
   onComplete: (task: Task) => void;
-  onOpenMenu?: (task: Task) => void;
+  onEdit?: (task: Task) => void;
+  onDelete?: (task: Task) => void;
   busy?: boolean;
   selected?: boolean;
 }) {
+  const { search } = useLocation();
   const done = task.status === "done";
   const overdue = isOverdue(task, now);
+
+  // DESIGN 4.19, minus the status submenu and assign, which need the detail sheet.
+  const actions: MenuItem[] = [
+    ...(done ? [] : [{ label: "Mark complete", icon: CircleCheck, kbd: "X", onSelect: () => onComplete(task) }]),
+    ...(onEdit ? [{ label: "Edit", icon: Pencil, kbd: "E", onSelect: () => onEdit(task) }] : []),
+    ...(onDelete
+      ? (["divider", { label: "Delete", icon: Trash2, kbd: "⌫", destructive: true, onSelect: () => onDelete(task) }] as MenuItem[])
+      : []),
+  ];
 
   return (
     <article
@@ -63,7 +75,7 @@ export function TaskCard({
 
       <div className="ml-3 min-w-0 flex-1">
         <Link
-          to={`/tasks/${task.id}`}
+          to={{ pathname: `/tasks/${task.id}`, search }}
           aria-label={taskAccessibleName(task, now)}
           className={cn(
             "block truncate text-body-strong before:absolute before:inset-0 before:content-['']",
@@ -113,15 +125,16 @@ export function TaskCard({
         <PriorityIndicator priority={task.priority} />
       </span>
 
-      {onOpenMenu ? (
-        <IconButton
-          label="More actions"
-          icon={Ellipsis}
-          size="sm"
-          disabled={busy}
-          onClick={() => onOpenMenu(task)}
-          className="z-10 ml-2 md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:group-focus-within:opacity-100"
-        />
+      {actions.length > 0 ? (
+        <span className="z-10 ml-2">
+          <Menu
+            label="More actions"
+            icon={Ellipsis}
+            items={actions}
+            disabled={busy}
+            triggerClassName="md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+          />
+        </span>
       ) : null}
     </article>
   );
