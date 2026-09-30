@@ -138,13 +138,17 @@ cd task-api && cp .env.example .env && npm start   # API on :3000, CORS open to 
 cd web && npm install && npm run dev                # client on :5173
 ```
 
-**What it does:** the read path. Stat tiles with an overdue warning, a status filter and
-paging held in the URL so a reload or a shared link restores the view, a task list with
-first-load skeletons, three distinct empty states and a load-error state, light and dark
-themes, a keyboard-navigable filter, screen-reader names on every card, and live-region
-announcements for list changes. The three write actions on screen — New task, Add sample
-tasks, and the complete checkbox — are deliberately inert. The write path, the detail
-sheet, and offline handling are specified in `web/DESIGN.md` but not built.
+**What it does:** stat tiles with an overdue warning, a status filter and paging held in
+the URL so a reload or a shared link restores the view, a task list with first-load
+skeletons, three distinct empty states and a load-error state, light and dark themes,
+screen-reader names on every card, and live-region announcements for list changes. Tasks
+can be created (New task button, the empty state, or the N key), edited (click a card or
+pick Edit from its menu), completed (the checkbox, optimistic with rollback), and deleted
+(menu, then a confirmation). The empty state can seed five sample tasks. Every write
+reports back with a toast, and a 404 mid-edit tells you the server was restarted.
+
+`/tasks/:id` opens the edit form for that task; the detail sheet, assign flow and offline
+handling from `web/DESIGN.md` are not built.
 
 **Stack:** Vite, React, TypeScript, Tailwind v4, TanStack Query, React Router.
 
