@@ -10,14 +10,15 @@ export function Pagination({
   count,
   onPrevious,
   onNext,
-  loading = false,
+  pending = null,
 }: {
   page: number;
   hasNext: boolean;
   count: number;
   onPrevious: () => void;
   onNext: () => void;
-  loading?: boolean;
+  /** Which pager button was last clicked, while its fetch is in flight. */
+  pending?: "previous" | "next" | null;
 }) {
   // DESIGN 4.15: when the whole result fits one page, the control is not rendered.
   if (page === 1 && !hasNext && count < PAGE_SIZE) return null;
@@ -33,7 +34,7 @@ export function Pagination({
           size="sm"
           leadingIcon={ChevronLeft}
           disabled={first}
-          loading={loading && !first}
+          loading={pending === "previous"}
           onClick={first ? undefined : onPrevious}
         >
           Previous
@@ -41,6 +42,7 @@ export function Pagination({
         <Button
           size="sm"
           disabled={!hasNext}
+          loading={pending === "next"}
           title={hasNext ? undefined : "You're on the last page"}
           onClick={hasNext ? onNext : undefined}
         >

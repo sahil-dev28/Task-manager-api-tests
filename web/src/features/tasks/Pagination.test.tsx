@@ -56,4 +56,18 @@ describe("Pagination", () => {
     await userEvent.click(screen.getByRole("button", { name: /Previous/ }));
     expect(onPrevious).not.toHaveBeenCalled();
   });
+
+  it("spins only the button that was clicked", () => {
+    const { rerender } = render(
+      <Pagination page={2} hasNext count={10} pending="next" onPrevious={() => {}} onNext={() => {}} />,
+    );
+    expect(screen.getByRole("button", { name: /Next/ })).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByRole("button", { name: /Previous/ })).not.toHaveAttribute("aria-busy");
+
+    rerender(
+      <Pagination page={2} hasNext count={10} pending="previous" onPrevious={() => {}} onNext={() => {}} />,
+    );
+    expect(screen.getByRole("button", { name: /Previous/ })).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByRole("button", { name: /Next/ })).not.toHaveAttribute("aria-busy");
+  });
 });
