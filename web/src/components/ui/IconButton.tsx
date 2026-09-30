@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { LoaderCircle } from "lucide-react";
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, Ref } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -20,6 +20,7 @@ const SIZE: Record<Size, string> = {
 };
 
 export type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  ref?: Ref<HTMLButtonElement>;
   label: string;
   icon: LucideIcon;
   variant?: Variant;
