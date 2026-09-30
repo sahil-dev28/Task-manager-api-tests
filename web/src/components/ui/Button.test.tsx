@@ -47,6 +47,11 @@ describe("Button", () => {
     expect(document.querySelector(".bg-mark")).not.toBeNull();
     expect(screen.getByRole("button", { name: /New task/ })).toHaveAttribute("aria-busy", "true");
   });
+
+  it("marks the spinner so reduced motion can keep it rotating", () => {
+    render(<Button loading>New task</Button>);
+    expect(document.querySelector('[data-motion="spinner"]')).not.toBeNull();
+  });
 });
 
 describe("IconButton", () => {

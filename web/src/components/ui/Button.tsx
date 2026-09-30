@@ -80,13 +80,13 @@ export function Button({
       {showMark && Icon ? (
         <span className="bg-mark grid size-7 place-items-center rounded-xs text-mark-ink">
           {loading ? (
-            <LoaderCircle aria-hidden className="size-3.5 animate-spin" />
+            <LoaderCircle aria-hidden data-motion="spinner" className="size-3.5 animate-spinner" />
           ) : (
             <Icon aria-hidden className="size-3.5" strokeWidth={2} />
           )}
         </span>
       ) : loading ? (
-        <LoaderCircle aria-hidden className="size-4 animate-spin" />
+        <LoaderCircle aria-hidden data-motion="spinner" className="size-4 animate-spinner" />
       ) : Icon ? (
         <Icon aria-hidden className="size-4" strokeWidth={1.75} />
       ) : null}

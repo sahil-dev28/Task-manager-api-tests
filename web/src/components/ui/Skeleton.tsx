@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 export const Skeleton = ({ className }: { className?: string }) => (
-  <div aria-hidden className={cn("animate-pulse bg-muted", className)} />
+  <div aria-hidden data-motion="skeleton" className={cn("animate-skeleton-pulse bg-muted", className)} />
 );
 
 /** Width varies per skeleton row (DESIGN 4.14), so it is an inline style, not a class. */
@@ -11,4 +11,4 @@ export const SkeletonLine = ({
 }: {
   width: number | string;
   height?: number;
-}) => <div aria-hidden style={{ width, height }} className="animate-pulse rounded-full bg-muted" />;
+}) => <div aria-hidden data-motion="skeleton" style={{ width, height }} className="animate-skeleton-pulse rounded-full bg-muted" />;

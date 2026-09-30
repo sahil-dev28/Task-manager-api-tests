@@ -24,4 +24,20 @@ describe("EmptyState", () => {
     render(<EmptyState icon={ListTodo} title="Nothing to do" body="Every task is done." />);
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
+
+  it("tints the icon disc for the error tone", () => {
+    const { container, rerender } = render(
+      <EmptyState icon={ListTodo} title="Couldn't load tasks" body="The server returned an error." tone="error" />,
+    );
+    const disc = container.querySelector("span");
+    expect(disc?.className).toContain("bg-danger-subtle");
+
+    rerender(<EmptyState icon={ListTodo} title="No tasks yet" body="Nothing here." />);
+    expect(container.querySelector("span")?.className).toContain("bg-subtle");
+  });
+
+  it("renders its icon", () => {
+    const { container } = render(<EmptyState icon={ListTodo} title="No tasks yet" body="Nothing here." />);
+    expect(container.querySelector("svg")).not.toBeNull();
+  });
 });

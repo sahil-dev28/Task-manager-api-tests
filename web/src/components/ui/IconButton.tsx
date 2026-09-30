@@ -57,7 +57,7 @@ export function IconButton({
       {...rest}
     >
       {loading ? (
-        <LoaderCircle aria-hidden className="size-4 animate-spin" />
+        <LoaderCircle aria-hidden data-motion="spinner" className="size-4 animate-spinner" />
       ) : (
         <Icon aria-hidden className={size === "lg" ? "size-[18px]" : "size-4"} strokeWidth={1.75} />
       )}

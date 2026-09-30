@@ -2,6 +2,14 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@keyframes skeleton-pulse {
+  from { opacity: 1; }
+  to { opacity: 0.55; }
+}
+@keyframes spinner {
+  to { transform: rotate(360deg); }
+}
+
 :root {
   /* 2.2 Semantic neutral tokens */
   --c-canvas: #EEF0F2;
@@ -230,6 +238,10 @@
   --shadow-md: var(--c-shadow-md);
   --shadow-lg: var(--c-shadow-lg);
   --shadow-ink: var(--c-shadow-ink);
+
+  /* 2.13 Motion */
+  --animate-skeleton-pulse: skeleton-pulse 1400ms linear infinite alternate;
+  --animate-spinner: spinner 700ms linear infinite;
 }
 
 @layer base {
@@ -261,6 +273,15 @@
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 120ms !important;
+    }
+    /* DESIGN 2.13: the spinner is a status signal, not decoration — it keeps rotating. */
+    [data-motion="spinner"] {
+      animation: spinner 700ms linear infinite !important;
+    }
+    /* DESIGN 2.13: the skeleton pulse becomes a static block. */
+    [data-motion="skeleton"] {
+      animation: none !important;
+      opacity: 1 !important;
     }
   }
 }
