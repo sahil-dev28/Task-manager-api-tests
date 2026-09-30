@@ -10,9 +10,9 @@ const daysBetween = (a: Date, b: Date) =>
   Math.round((startOfDay(a).getTime() - startOfDay(b).getTime()) / 86_400_000);
 
 /**
- * DESIGN 4.6. The picker yields "YYYY-MM-DD"; the API compares dueDate against
- * now, so a midnight timestamp would mark a task due today as overdue all day.
- * The stored instant is the end of that day in the user's own timezone.
+ * The date picker yields "YYYY-MM-DD". The API compares dueDate against now,
+ * so a midnight timestamp would mark a task due today as overdue all day;
+ * store the end of that day in the user's own timezone instead.
  */
 export function toDueDateIso(value: string): string {
   const [y, m, d] = value.split("-").map(Number) as [number, number, number];
@@ -25,7 +25,7 @@ export function toDateInputValue(iso: string | null): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export function formatRelativeDate(iso: string, now: Date = new Date()): string {
+export function formatDate(iso: string, now: Date = new Date()): string {
   const d = new Date(iso);
   const delta = daysBetween(d, now);
   if (delta === 0) return "Today";
@@ -33,11 +33,6 @@ export function formatRelativeDate(iso: string, now: Date = new Date()): string 
   if (delta === -1) return "Yesterday";
   const base = `${MONTHS[d.getMonth()]} ${d.getDate()}`;
   return d.getFullYear() === now.getFullYear() ? base : `${base}, ${d.getFullYear()}`;
-}
-
-export function formatDateTime(iso: string): string {
-  const d = new Date(iso);
-  return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} at ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export function isOverdue(
