@@ -4,6 +4,7 @@ import type { ReactElement, ReactNode } from "react";
 import { MemoryRouter } from "react-router";
 
 import { LiveRegionProvider } from "@/app/LiveRegion";
+import { ToastProvider } from "@/app/toast";
 
 export function makeTestQueryClient() {
   return new QueryClient({
@@ -22,7 +23,9 @@ export function renderWithProviders(
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <MemoryRouter initialEntries={[route]}>
       <QueryClientProvider client={queryClient}>
-        <LiveRegionProvider>{children}</LiveRegionProvider>
+        <ToastProvider>
+          <LiveRegionProvider>{children}</LiveRegionProvider>
+        </ToastProvider>
       </QueryClientProvider>
     </MemoryRouter>
   );

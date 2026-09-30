@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router";
 import { LiveRegionProvider } from "./LiveRegion";
 import { createQueryClient } from "./queryClient";
 import { ThemeProvider } from "./theme";
+import { ToastProvider } from "./toast";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(createQueryClient);
@@ -12,7 +13,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ThemeProvider>
-          <LiveRegionProvider>{children}</LiveRegionProvider>
+          <ToastProvider>
+            <LiveRegionProvider>{children}</LiveRegionProvider>
+          </ToastProvider>
         </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
