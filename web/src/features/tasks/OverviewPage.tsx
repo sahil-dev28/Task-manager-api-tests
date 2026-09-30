@@ -67,6 +67,8 @@ export function OverviewPage() {
         isError={list.isError}
         error={messageOf(list.error)}
         activeStatus={status}
+        // The write path (create, complete, sample data) is designed in DESIGN.md §5
+        // and §6.2 but not built; these stay inert so the read path is complete on its own.
         onComplete={() => {}}
         onNewTask={() => {}}
         onAddSamples={() => {}}
