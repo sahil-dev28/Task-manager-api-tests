@@ -136,7 +136,6 @@ server. The backend deliverables above are unchanged.
 ```bash
 cd task-api && cp .env.example .env && npm start   # API on :3000, CORS open to :5173
 cd web && npm install && npm run dev                # client on :5173
-cd web && npm test                                  # 162 tests, Vitest + MSW
 ```
 
 **What it does:** the read path. Stat tiles with an overdue warning, a status filter and
