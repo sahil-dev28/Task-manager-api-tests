@@ -1,4 +1,5 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
+// Paths are appended with a leading slash, so a trailing one here would produce "//tasks".
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
 
 /** The server answered with a non-2xx status and, usually, an `{ error }` body. */
 export class ApiError extends Error {
